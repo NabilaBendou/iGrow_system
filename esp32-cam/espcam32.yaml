@@ -13,7 +13,7 @@ psram:
 logger:
   level: DEBUG
 
-# Disable API for now to simplify
+
 api:
 
 ota:
@@ -21,7 +21,7 @@ ota:
 
 wifi:
   ssid: "A14"
-  password: "rimajloul23"  # CHANGE THIS to your hotspot password
+  password: "rimajloul23"  
   fast_connect: true
   
   ap:
