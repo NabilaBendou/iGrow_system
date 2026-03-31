@@ -1,0 +1,81 @@
+views:
+  - type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: markdown
+            content: |
+              # 🌱 iGrow - Smart Agricultor
+              ### Système de surveillance intelligent
+            style: |
+              ha-card {
+                background: linear-gradient(135deg, #2e7d32, #81c784);
+                color: white;
+                padding: 20px;
+                border-radius: 15px;
+              }
+          - type: gauge
+            name: 🌡️ Température
+            entity: sensor.temperature_demo
+            min: 0
+            max: 40
+            severity:
+              green: 20
+              yellow: 28
+              red: 35
+            needle: true
+          - type: gauge
+            name: 💧 Humidité Air
+            entity: sensor.humidity_air_demo
+            min: 0
+            max: 100
+            severity:
+              green: 60
+              yellow: 40
+              red: 20
+            needle: true
+          - type: gauge
+            name: 🌱 Humidité Sol A
+            entity: sensor.soil_moisture_demo
+            min: 0
+            max: 100
+            severity:
+              green: 60
+              yellow: 40
+              red: 20
+            needle: true
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.pump_demo
+                name: Pompe
+                icon: mdi:water-pump
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.lights_demo
+                name: Lumières
+                icon: mdi:lightbulb
+                layout: vertical
+              - type: custom:mushroom-entity-card
+                entity: input_boolean.fan_demo
+                name: Ventilateur
+                icon: mdi:fan
+                layout: vertical
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
+          - type: picture
+            title: 📹 Caméra du jardin
+            image: >-
+              https://via.placeholder.com/800x400/2e7d32/ffffff?text=iGrow+Live+Camera+Feed
+      - type: grid
+        cards:
+          - type: heading
+            heading: New section
