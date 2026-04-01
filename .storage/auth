@@ -47,6 +47,17 @@
         "name": "mqtt_user",
         "system_generated": false,
         "local_only": false
+      },
+      {
+        "id": "694e0a8c1e70470aaa720651941f80ff",
+        "group_ids": [
+          "system-read-only"
+        ],
+        "is_owner": false,
+        "is_active": true,
+        "name": "Home Assistant Content",
+        "system_generated": true,
+        "local_only": false
       }
     ],
     "groups": [
@@ -270,6 +281,40 @@
         "expire_at": 1781048187.938684,
         "credential_id": "fd3906931aca44e398c2576429d2b72c",
         "version": "2026.2.3"
+      },
+      {
+        "id": "5b1421ab7dd04d55a3670f65cc138a7c",
+        "user_id": "002421c733b24aa1ac802729fdf4af5c",
+        "client_id": "http://localhost:8123/",
+        "client_name": null,
+        "client_icon": null,
+        "token_type": "normal",
+        "created_at": "2026-03-31T12:26:26.111618+00:00",
+        "access_token_expiration": 1800.0,
+        "token": "8bb86d5052f2f0d87aa97663e5ea00cc16b3de02c233bdd592185b853d43678c7c004cf0740c242e70c530905fe7668b8025360c9ccbd3c0f606f2735e352ade",
+        "jwt_key": "07bca3a77752a172fe1aea9fcfc699bd54232d1df9bc60d8b9ce81ebf87609f54ac99bcce477cefedf0289f34e9cc018aa2552f9f79bfb95468e739d75823055",
+        "last_used_at": "2026-04-01T00:15:15.656051+00:00",
+        "last_used_ip": "172.17.0.1",
+        "expire_at": 1782778515.656051,
+        "credential_id": "fd3906931aca44e398c2576429d2b72c",
+        "version": "2026.3.4"
+      },
+      {
+        "id": "24ebbb79c5c3493db7533ee7643aeda2",
+        "user_id": "694e0a8c1e70470aaa720651941f80ff",
+        "client_id": null,
+        "client_name": null,
+        "client_icon": null,
+        "token_type": "system",
+        "created_at": "2026-03-31T12:24:47.034183+00:00",
+        "access_token_expiration": 1800.0,
+        "token": "c401456641edc3ffcb4557c3cff9e28c516ff60ff8524fb2247ec08b51644fbad6149f25823c47a72fdf536b6de41bc4c968e2374c98f1f37e63ecd4d6745ef2",
+        "jwt_key": "d2737d0db702cceb8a29f8e96754ee4625567a1e92a8ce9fa959627919181f6e93d7aa69018b48d47feb74211b8ec9b40608ea054e44cfb2cec1d6201c63b9ac",
+        "last_used_at": null,
+        "last_used_ip": null,
+        "expire_at": null,
+        "credential_id": null,
+        "version": "2026.3.4"
       }
     ]
   }

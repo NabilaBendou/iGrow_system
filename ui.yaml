@@ -1,81 +1,182 @@
 views:
-  - type: sections
+  - title: iGrow Dashboard
+    icon: mdi:sprout
+    type: sections
     sections:
+
+      # ── HEADER ────────────────────────────────────────────
       - type: grid
+        column_span: 3
         cards:
-          - type: heading
-            heading: New section
           - type: markdown
-            content: |
-              # 🌱 iGrow - Smart Agricultor
-              ### Système de surveillance intelligent
-            style: |
-              ha-card {
-                background: linear-gradient(135deg, #2e7d32, #81c784);
-                color: white;
-                padding: 20px;
-                border-radius: 15px;
-              }
+            content: >
+              <div style="background: linear-gradient(135deg, #1b5e20, #2e7d32, #388e3c);
+                border-radius: 16px; padding: 20px 24px;
+                display: flex; align-items: center; justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:12px">
+                  <span style="font-size:32px">🌱</span>
+                  <div>
+                    <div style="color:#fff; font-size:22px; font-weight:700; letter-spacing:-0.5px">iGrow</div>
+                    <div style="color:rgba(255,255,255,0.65); font-size:11px; letter-spacing:2px; margin-top:2px">SMART AGRICULTURE SYSTEM</div>
+                  </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2);
+                  color:#fff; border-radius:20px; padding:6px 14px; font-size:12px">
+                  🟢 Système actif
+                </div>
+              </div>
+
+      # ── MUSHROOM SENSOR CHIPS ─────────────────────────────
+      - type: grid
+        column_span: 3
+        cards:
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: sensor.temperature_demo
+                icon: mdi:thermometer
+                icon_color: red
+              - type: entity
+                entity: sensor.humidity_air_demo
+                icon: mdi:water-percent
+                icon_color: blue
+              - type: entity
+                entity: sensor.soil_moisture_demo
+                icon: mdi:sprout
+                icon_color: green
+              - type: entity
+                entity: sensor.light_demo
+                icon: mdi:weather-sunny
+                icon_color: amber
+
+      # ── SENSORS ───────────────────────────────────────────
+      - type: grid
+        title: Capteurs Environnementaux
+        column_span: 3
+        cards:
           - type: gauge
             name: 🌡️ Température
             entity: sensor.temperature_demo
             min: 0
             max: 40
+            needle: true
             severity:
-              green: 20
+              green: 18
               yellow: 28
               red: 35
-            needle: true
+
           - type: gauge
             name: 💧 Humidité Air
             entity: sensor.humidity_air_demo
+            unit: "%"
             min: 0
             max: 100
+            needle: true
             severity:
               green: 60
               yellow: 40
               red: 20
-            needle: true
+
           - type: gauge
             name: 🌱 Humidité Sol A
             entity: sensor.soil_moisture_demo
+            unit: "%"
             min: 0
             max: 100
+            needle: true
             severity:
               green: 60
               yellow: 40
               red: 20
+
+          - type: gauge
+            name: ☀️ Luminosité
+            entity: sensor.light_demo
+            unit: lx
+            min: 0
+            max: 100000
             needle: true
+            severity:
+              green: 10000
+              yellow: 1000
+              red: 0
+
+      # ── HISTORY GRAPHS (3 side by side) ───────────────────
       - type: grid
+        title: Historique des capteurs (24h)
+        column_span: 2
         cards:
-          - type: heading
-            heading: New section
-          - type: horizontal-stack
-            cards:
-              - type: custom:mushroom-entity-card
-                entity: input_boolean.pump_demo
-                name: Pompe
-                icon: mdi:water-pump
-                layout: vertical
-              - type: custom:mushroom-entity-card
-                entity: input_boolean.lights_demo
-                name: Lumières
-                icon: mdi:lightbulb
-                layout: vertical
-              - type: custom:mushroom-entity-card
-                entity: input_boolean.fan_demo
-                name: Ventilateur
-                icon: mdi:fan
-                layout: vertical
+          - type: history-graph
+            title: 🌡️ Température
+            entities:
+              - entity: sensor.temperature_demo
+                name: Température
+            hours_to_show: 24
+
+          - type: history-graph
+            title: 💧 Humidité
+            entities:
+              - entity: sensor.humidity_air_demo
+                name: Humidité Air
+              - entity: sensor.soil_moisture_demo
+                name: Humidité Sol
+            hours_to_show: 24
+
+          - type: history-graph
+            title: ☀️ Luminosité
+            entities:
+              - entity: sensor.light_demo
+                name: Luminosité
+            hours_to_show: 24
+
+      # ── EQUIPMENT CONTROLS (MUSHROOM) ─────────────────────
       - type: grid
+        title: Contrôle des Équipements
+        column_span: 3
         cards:
-          - type: heading
-            heading: New section
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.pump_demo
+            name: Pompe
+            icon: mdi:water-pump
+            layout: vertical
+            tap_action:
+              action: toggle
+            icon_color: blue
+
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.lights_demo
+            name: Lumières
+            icon: mdi:lightbulb
+            layout: vertical
+            tap_action:
+              action: toggle
+            icon_color: amber
+
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.fan_demo
+            name: Ventilateur
+            icon: mdi:fan
+            layout: vertical
+            tap_action:
+              action: toggle
+            icon_color: green
+
+      # ── CAMERA + LOGBOOK SIDE BY SIDE ─────────────────────
+      - type: grid
+        column_span: 2
+        cards:
           - type: picture
-            title: 📹 Caméra du jardin
+            title: 📹 Caméra du jardin — CAM_01
             image: >-
-              https://via.placeholder.com/800x400/2e7d32/ffffff?text=iGrow+Live+Camera+Feed
+              https://via.placeholder.com/800x400/1b5e20/ffffff?text=iGrow+Live+Camera+Feed
+
       - type: grid
+        column_span: 1
         cards:
-          - type: heading
-            heading: New section
+          - type: logbook
+            title: 📋 Journal des événements
+            entities:
+              - input_boolean.pump_demo
+              - input_boolean.lights_demo
+              - input_boolean.fan_demo
+            hours: 24

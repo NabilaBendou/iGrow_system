@@ -1,0 +1,50 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+lovelace:
+  mode: yaml
+  resources:
+    - url: /hacsfiles/lovelace-mushroom/mushroom.js
+      type: module
+  dashboards:
+    main-dashboard:
+      mode: yaml
+      filename: ui.yaml
+      title: Main Dashboard
+      icon: mdi:home
+      show_in_sidebar: true
+      require_admin: false
+
+input_boolean:
+  pump_demo:
+    name: Pompe
+    icon: mdi:water-pump
+  lights_demo:
+    name: Lumières
+    icon: mdi:lightbulb
+  fan_demo:
+    name: Ventilateur
+    icon: mdi:fan
+
+template:
+  - sensor:
+      - name: temperature_demo
+        unit_of_measurement: "°C"
+        state: "24"
+      - name: humidity_air_demo
+        unit_of_measurement: "%"
+        state: "70"
+      - name: soil_moisture_demo
+        unit_of_measurement: "%"
+        state: "43"
+      - name: light_demo
+        unit_of_measurement: "lx"
+        state: "12000"

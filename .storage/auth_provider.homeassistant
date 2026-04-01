@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "auth_provider.homeassistant",
+  "data": {
+    "users": [
+      {
+        "username": "nn_bendou@esi.dz",
+        "password": "JDJiJDEyJFY1TGphWHBXRXd5em03bXhraGdpMk9pV2FjMW1xQndSV29Gc3VIYzcxeG52aGdjS283MDVP"
+      }
+    ]
+  }
+}

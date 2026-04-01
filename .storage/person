@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "minor_version": 1,
+  "key": "person",
+  "data": {
+    "items": [
+      {
+        "id": "bendou_nabila",
+        "name": "BENDOU NABILA",
+        "user_id": "6c36f51385e040a988a6693b66fef3b8",
+        "device_trackers": []
+      }
+    ]
+  }
+}
