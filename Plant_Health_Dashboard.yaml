@@ -1,0 +1,78 @@
+views:
+  - type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: ' 🌱 Live Greenhouse'
+            heading_style: title
+            icon: mdi:camera-iris
+          - type: tile
+            entity: camera.esp32_cam_esp32_cam
+            color: purple
+            show_entity_picture: true
+            vertical: true
+            features_position: bottom
+            grid_options:
+              columns: full
+              rows: 4
+          - type: custom:bar-card
+            name: Health score
+            unit: '%'
+            min: 0
+            max: 100
+            height: 30px
+            border_radius: 15px
+            severity:
+              - value: 70
+                color: '#4caf50'
+              - value: 40
+                color: '#ffaa44'
+              - value: 20
+                color: '#ff4444'
+            entities:
+              - entity: input_number.plant_confidence
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: 📊 Plant Health Status
+            icon: mdi:bottle-tonic-plus
+          - type: tile
+            entity: input_number.plant_confidence
+            color: pink
+            vertical: true
+            features_position: bottom
+          - type: tile
+            entity: input_text.plant_labels
+            vertical: true
+            features_position: bottom
+          - type: tile
+            entity: input_datetime.last_analysis
+            color: pink
+            vertical: true
+            features_position: bottom
+          - type: tile
+            entity: input_text.plant_health_status
+            vertical: true
+            features_position: bottom
+      - type: grid
+        cards:
+          - type: heading
+            heading: 💚 Plant Vitality
+            heading_style: title
+          - type: gauge
+            entity: input_number.plant_confidence
+            name: 🌿 Plant Health
+            unit: '%'
+            min: 0
+            max: 100
+            severity:
+              green: 70
+              yellow: 40
+              red: 20
+            needle: true
+            grid_options:
+              columns: 36
+              rows: auto
+        column_span: 3
