@@ -6,7 +6,7 @@
     {
       "state": {"entity_id":"conversation.home_assistant","state":"2026-02-24T02:45:10.871668+00:00","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2026-04-01T00:30:50.931542+00:00","last_reported":"2026-04-01T00:30:50.931542+00:00","last_updated":"2026-04-01T00:30:50.931542+00:00","context":{"id":"01KN376FHK8STWZSRZPCTY83Q2","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"event.backup_automatic_backup","state":"unknown","attributes":{"event_types":["completed","failed","in_progress"],"event_type":null,"friendly_name":"Backup Sauvegarde automatique"},"last_changed":"2026-04-01T00:30:51.121063+00:00","last_reported":"2026-04-01T00:30:51.121063+00:00","last_updated":"2026-04-01T00:30:51.121063+00:00","context":{"id":"01KN376FQHGSP629Z1M4S8X0YH","parent_id":null,"user_id":null}},
@@ -14,27 +14,27 @@
         "last_event_type": null,
         "last_event_attributes": null
       },
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"person.bendou_nabila","state":"unknown","attributes":{"editable":true,"id":"bendou_nabila","device_trackers":[],"user_id":"6c36f51385e040a988a6693b66fef3b8","friendly_name":"BENDOU NABILA"},"last_changed":"2026-04-01T00:30:52.843459+00:00","last_reported":"2026-04-01T00:30:57.546689+00:00","last_updated":"2026-04-01T00:30:57.546689+00:00","context":{"id":"01KN376P0A441JWN1CEZ4XNNTY","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"input_boolean.pump_demo","state":"on","attributes":{"editable":false,"icon":"mdi:water-pump","friendly_name":"Pompe"},"last_changed":"2026-04-01T00:30:52.843824+00:00","last_reported":"2026-04-01T00:30:52.843824+00:00","last_updated":"2026-04-01T00:30:52.843824+00:00","context":{"id":"01KN376HDBMX7ACTZSSJMB8TDW","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"input_boolean.lights_demo","state":"on","attributes":{"editable":false,"icon":"mdi:lightbulb","friendly_name":"Lumières"},"last_changed":"2026-04-01T00:30:52.843943+00:00","last_reported":"2026-04-01T00:30:52.843943+00:00","last_updated":"2026-04-01T00:30:52.843943+00:00","context":{"id":"01KN376HDBN8QE1CS4T6AJ5HP9","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"input_boolean.fan_demo","state":"on","attributes":{"editable":false,"icon":"mdi:fan","friendly_name":"Ventilateur"},"last_changed":"2026-04-01T00:30:52.844029+00:00","last_reported":"2026-04-01T00:30:52.844029+00:00","last_updated":"2026-04-01T00:30:52.844029+00:00","context":{"id":"01KN376HDCAFQDQY3Q2WB1FMVW","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"sensor.temperature_demo","state":"24.0","attributes":{"unit_of_measurement":"°C","friendly_name":"temperature_demo"},"last_changed":"2026-04-01T00:30:57.547863+00:00","last_reported":"2026-04-01T00:30:57.547863+00:00","last_updated":"2026-04-01T00:30:57.547863+00:00","context":{"id":"01KN376P0BR8Q9SR55W220RS6S","parent_id":null,"user_id":null}},
@@ -42,7 +42,7 @@
         "native_value": 24.0,
         "native_unit_of_measurement": "°C"
       },
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"sensor.humidity_air_demo","state":"70.0","attributes":{"unit_of_measurement":"%","friendly_name":"humidity_air_demo"},"last_changed":"2026-04-01T00:30:57.548450+00:00","last_reported":"2026-04-01T00:30:57.548450+00:00","last_updated":"2026-04-01T00:30:57.548450+00:00","context":{"id":"01KN376P0CNWE3YXQKVMRPFMBB","parent_id":null,"user_id":null}},
@@ -50,7 +50,7 @@
         "native_value": 70.0,
         "native_unit_of_measurement": "%"
       },
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"sensor.soil_moisture_demo","state":"43.0","attributes":{"unit_of_measurement":"%","friendly_name":"soil_moisture_demo"},"last_changed":"2026-04-01T00:30:57.548696+00:00","last_reported":"2026-04-01T00:30:57.548696+00:00","last_updated":"2026-04-01T00:30:57.548696+00:00","context":{"id":"01KN376P0C6VA9X4SY0Q6GNRAP","parent_id":null,"user_id":null}},
@@ -58,7 +58,7 @@
         "native_value": 43.0,
         "native_unit_of_measurement": "%"
       },
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"sensor.light_demo","state":"12000.0","attributes":{"unit_of_measurement":"lx","friendly_name":"light_demo"},"last_changed":"2026-04-01T00:30:57.548866+00:00","last_reported":"2026-04-01T00:30:57.548866+00:00","last_updated":"2026-04-01T00:30:57.548866+00:00","context":{"id":"01KN376P0CV47THVGAN21RD9AJ","parent_id":null,"user_id":null}},
@@ -66,22 +66,22 @@
         "native_value": 12000.0,
         "native_unit_of_measurement": "lx"
       },
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"update.mushroom_update","state":"off","attributes":{"auto_update":false,"display_precision":0,"installed_version":"v5.1.1","in_progress":false,"latest_version":"v5.1.1","release_summary":null,"release_url":"https://github.com/piitaya/lovelace-mushroom/releases/v5.1.1","skipped_version":null,"title":null,"update_percentage":null,"friendly_name":"Mushroom update","supported_features":23},"last_changed":"2026-04-01T00:30:57.212124+00:00","last_reported":"2026-04-01T00:30:57.212124+00:00","last_updated":"2026-04-01T00:30:57.212124+00:00","context":{"id":"01KN376NNW7GYPC57GF1X326R1","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"update.hacs_update","state":"off","attributes":{"auto_update":false,"display_precision":0,"installed_version":"2.0.5","in_progress":false,"latest_version":"2.0.5","release_summary":null,"release_url":"https://github.com/hacs/integration/releases/2.0.5","skipped_version":null,"title":null,"update_percentage":null,"entity_picture":"https://brands.home-assistant.io/_/hacs/icon.png","friendly_name":"HACS update","supported_features":23},"last_changed":"2026-04-01T00:30:57.212298+00:00","last_reported":"2026-04-01T00:30:57.212298+00:00","last_updated":"2026-04-01T00:30:57.212298+00:00","context":{"id":"01KN376NNW37VYD2RNCVD299E7","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     },
     {
       "state": {"entity_id":"tts.google_translate_en_com_2","state":"unknown","attributes":{"friendly_name":"Google Translate en com"},"last_changed":"2026-04-01T00:30:57.224987+00:00","last_reported":"2026-04-01T00:30:57.224987+00:00","last_updated":"2026-04-01T00:30:57.224987+00:00","context":{"id":"01KN376NP8BKBBEAYKRWW97CNV","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2026-04-01T19:26:43.926926+00:00"
+      "last_seen": "2026-04-01T19:41:43.686955+00:00"
     }
   ]
 }
