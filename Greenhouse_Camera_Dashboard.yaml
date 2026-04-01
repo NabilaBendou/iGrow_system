@@ -1,0 +1,181 @@
+views:
+  - type: sections
+    title: 📸 ESP32-CAM Security
+    sections:
+      - type: grid
+        columns: 1
+        cards:
+          - type: heading
+            heading_style: title
+            heading: 🎥 Live Camera Feed
+            heading_size: large
+            icon: mdi:cctv
+          - type: picture-entity
+            entity: camera.esp32_cam_esp32_cam
+            camera_view: live
+            aspect_ratio: '16:9'
+            show_state: true
+            show_name: true
+            name: Greenhouse Camera
+            fit_mode: cover
+            tap_action:
+              action: more-info
+            double_tap_action:
+              action: call-service
+              service: camera.snapshot
+              data:
+                filename: /config/www/snapshot_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg
+            style: |
+              ha-card {
+                border-radius: 20px;
+                box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+              }
+          - type: custom:mushroom-template-card
+            primary: Camera Status
+            secondary: |
+              {% if is_state('camera.esp32_cam_esp32_cam', 'idle') %}
+                🟢 Online
+              {% else %}
+                🟡 Streaming
+              {% endif %}
+            icon: mdi:webcam
+            icon_color: green
+          - type: custom:mushroom-template-card
+            primary: Last Snapshot
+            secondary: |
+              {{ as_timestamp(now()) | timestamp_custom('%H:%M:%S') }}
+            icon: mdi:camera-timer
+            icon_color: blue
+          - type: custom:mushroom-template-card
+            primary: Storage Used
+            secondary: 2.3 GB / 32 GB
+            icon: mdi:sd
+            icon_color: cyan
+          - type: custom:mushroom-entity-card
+            entity: camera.esp32_cam_esp32_cam
+            name: Record Video
+            icon: mdi:video
+            layout: vertical
+            tap_action:
+              action: call-service
+              service: camera.record
+          - type: custom:mushroom-entity-card
+            entity: camera.esp32_cam_esp32_cam
+            name: Full Screen
+            icon: mdi:fullscreen
+            layout: vertical
+            tap_action:
+              action: more-info
+          - type: custom:mushroom-entity-card
+            entity: light.esp32_cam_camera_flash
+            name: Flashlight
+            icon: mdi:flashlight
+            layout: vertical
+            tap_action:
+              action: toggle
+          - type: custom:mushroom-entity-card
+            entity: camera.esp32_cam_esp32_cam
+            name: Night Mode
+            icon: mdi:weather-night
+            layout: vertical
+            tap_action:
+              action: toggle
+        column_span: 1
+      - type: grid
+        columns: 2
+        cards:
+          - type: heading
+            heading_style: subheading
+            heading: 🚨 Recent Motion Events
+            icon: mdi:alert
+          - type: custom:logbook-card
+            entities:
+              - camera.esp32_cam_esp32_cam
+            hours_to_show: 24
+            title: Detection History
+            entity: binary_sensor.greenhouse_presence
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                content: 'Last Motion: 2 mins ago'
+                icon: mdi:motion-sensor
+              - type: template
+                content: 'Total Events: 47'
+                icon: mdi:counter
+              - type: template
+                content: 'Active: Yes'
+                icon: mdi:check-circle
+      - type: grid
+        columns: 3
+        cards:
+          - type: heading
+            heading_style: subheading
+            heading: 🎮 Controls
+            icon: mdi:remote
+          - type: custom:button-card
+            name: Take Snapshot
+            icon: mdi:camera
+            color: rgb(66, 133, 244)
+            tap_action:
+              action: call-service
+              service: camera.snapshot
+              service_data:
+                entity_id: camera.esp32_cam_esp32_cam
+                filename: /config/www/snapshots/latest.jpg
+            style:
+              border-radius: 15px
+              background: linear-gradient(135deg,
+          - type: custom:button-card
+            name: Motion Detection
+            icon: mdi:motion-sensor
+            color: rgb(255, 152, 0)
+            tap_action:
+              action: toggle
+            style:
+              border-radius: 15px
+        column_span: 1
+      - type: grid
+        columns: 2
+        cards:
+          - type: markdown
+            title: 📊 Camera Statistics
+            content: >
+              | Metric | Value |
+
+              |--------|-------|
+
+              | **FPS** | {{ state_attr('camera.esp32_cam_esp32_cam',
+              'framerate') | default('N/A') }} |
+
+              | **Resolution** | {{ state_attr('camera.esp32_cam_esp32_cam',
+              'resolution') | default('N/A') }} |
+
+              | **Status** | {{ states('camera.esp32_cam_esp32_cam') }} |
+          - type: history-graph
+            title: 📈 Motion Events (24h)
+            entities:
+              - camera.esp32_cam_esp32_cam
+            hours_to_show: 24
+      - type: grid
+        columns: 3
+        cards:
+          - type: heading
+            heading_style: subheading
+            heading: 🌱 Greenhouse Environment
+            icon: mdi:leaf
+          - type: custom:mushroom-template-card
+            primary: Temperature
+            secondary: '{{ states(''sensor.temperature_serre'') | default(''22'') }}°C'
+            icon: mdi:thermometer
+            icon_color: orange
+          - type: custom:mushroom-template-card
+            primary: Humidity
+            secondary: '{{ states(''sensor.humidity_serre'') | default(''65'') }}%'
+            icon: mdi:water-percent
+            icon_color: blue
+          - type: custom:mushroom-template-card
+            primary: Light Level
+            secondary: '{{ states(''sensor.greenhouse_light_level'') | default(''350'') }} lux'
+            icon: mdi:brightness-5
+            icon_color: yellow
+        column_span: 3
