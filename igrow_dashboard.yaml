@@ -1,0 +1,397 @@
+views:
+  - type: sections
+    title: 🌱 iGrow Smart Greenhouse
+    sections:
+      - type: grid
+        column_span: 4
+        cards:
+          - type: markdown
+            content: |
+              # 🌱 iGrow Smart Greenhouse
+              ### Live Monitoring & Control System
+            style: |
+              ha-card {
+                background: linear-gradient(135deg, #1b5e20, #66bb6a);
+                color: white;
+                padding: 25px;
+                border-radius: 18px;
+                text-align: center;
+                font-size: 18px;
+              }
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: 📊 Live Environment
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: sensor.greenhouse_temperature
+                name: Temperature
+                show_state: true
+                icon: mdi:thermometer
+                styles:
+                  card:
+                    - height: 150px
+                    - width: 150px
+                    - border-radius: 12px
+                    - transition: all 1s ease
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(entity?.state) || 0;
+                          if(val < 10) return 'linear-gradient(135deg, #2196F3, #64B5F6)';
+                          if(val < 25) return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                          if(val < 35) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                          return 'linear-gradient(135deg, #F44336, #E57373)';
+                        ]]]
+                  icon:
+                    - animation: spin 2s linear infinite
+                card_mod:
+                  style: |
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+              - type: custom:button-card
+                entity: sensor.greenhouse_humidity
+                name: Humidity
+                show_state: true
+                icon: mdi:water-percent
+                styles:
+                  card:
+                    - height: 150px
+                    - width: 150px
+                    - border-radius: 12px
+                    - transition: all 1s ease
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(entity?.state) || 0;
+                          if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
+                          if(val < 60) return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                          return 'linear-gradient(135deg, #2196F3, #64B5F6)';
+                        ]]]
+                  icon:
+                    - animation: spin 2s linear infinite
+                card_mod:
+                  style: |
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+              - type: custom:button-card
+                entity: input_number.soil_moisture
+                name: Soil Moisture
+                show_state: true
+                icon: mdi:leaf
+                styles:
+                  card:
+                    - height: 150px
+                    - width: 150px
+                    - border-radius: 12px
+                    - transition: all 1s ease
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(states['input_number.soil_moisture']?.state) || 0;
+                          if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
+                          if(val < 70) return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                          return 'linear-gradient(135deg, #2196F3, #64B5F6)';
+                        ]]]
+                  icon:
+                    - animation: spin 2s linear infinite
+                card_mod:
+                  style: |
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+              - type: custom:button-card
+                entity: input_number.greenhouse_light_level
+                name: Light
+                show_state: true
+                icon: mdi:brightness-5
+                styles:
+                  card:
+                    - height: 150px
+                    - width: 150px
+                    - border-radius: 12px
+                    - transition: all 1s ease
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(states['input_number.greenhouse_light_level']?.state) || 0;
+                          if(val < 200) return 'linear-gradient(135deg, #F44336, #E57373)';
+                          if(val < 600) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                        ]]]
+                  icon:
+                    - animation: spin 2s linear infinite
+                card_mod:
+                  style: |
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+      - type: grid
+        column_span: 1
+        cards:
+          - type: heading
+            heading: 🎛️ Control Panel
+          - type: grid
+            columns: 3
+            square: true
+            cards:
+              - type: custom:button-card
+                entity: input_boolean.light_virtual
+                name: 💡 LIGHT
+                icon: mdi:lightbulb
+                tap_action:
+                  action: call-service
+                  service: script.toggle_light_virtual
+                state:
+                  - value: 'on'
+                    styles:
+                      card:
+                        - box-shadow: 0px 0px 20px 5px
+                styles:
+                  card:
+                    - height: 120px
+                    - width: 120px
+                    - color: white
+                    - background-color: >
+                        [[[ return entity.state === 'on' ? '#4CAF50' : '#444';
+                        ]]]
+              - type: custom:button-card
+                entity: input_boolean.fan_virtual
+                name: 🌬️ FAN
+                icon: mdi:fan
+                tap_action:
+                  action: call-service
+                  service: script.toggle_fan_virtual
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - animation: spin 1.5s linear infinite
+                styles:
+                  card:
+                    - height: 120px
+                    - width: 120px
+                    - color: white
+                    - background-color: >
+                        [[[ return entity.state === 'on' ? '#2196F3' : '#444';
+                        ]]]
+                card_mod:
+                  style: |
+                    @keyframes spin {
+                      100% { transform: rotate(360deg); }
+                    }
+              - type: custom:button-card
+                entity: input_boolean.pump_virtual
+                name: 💧 PUMP
+                icon: mdi:water-pump
+                tap_action:
+                  action: call-service
+                  service: script.toggle_pump_virtual
+                state:
+                  - value: 'on'
+                    styles:
+                      card:
+                        - animation: pulse 1.5s infinite
+                styles:
+                  card:
+                    - height: 120px
+                    - width: 120px
+                    - color: white
+                    - background-color: >
+                        [[[ return entity.state === 'on' ? '#00BCD4' : '#444';
+                        ]]]
+                card_mod:
+                  style: |
+                    @keyframes pulse {
+                      50% { transform: scale(1.05); }
+                    }
+            grid_options:
+              rows: auto
+              columns: full
+      - type: grid
+        column_span: 1
+        cards:
+          - type: heading
+            heading: ⚠️ Smart Alerts
+          - type: markdown
+            content: >
+              {% set temp = states('sensor.greenhouse_temperature') | float(0)
+              %} {% set humidity = states('sensor.greenhouse_humidity') |
+              float(0) %} {% set moisture = states('input_number.soil_moisture')
+              | float(0) %} {% set light =
+              states('input_number.greenhouse_light_level') | float(0) %} {% set
+              presence = is_state('input_boolean.greenhouse_presence','on') %}
+              {% set priority =
+              state_attr('sensor.greenhouse_automation_action','priority') %}
+
+              {% if priority == 'critical' %} ## 🚨 CRITICAL CONDITION {% elif
+              priority == 'high' %} ## 🔥 HIGH ALERT {% else %} ## ✅ STABLE
+              CONDITIONS {% endif %}
+
+              **Environment** - 🌡️ Temp: **{{ temp }}°C** - 💧 Humidity: **{{
+              humidity }}%** - 🌱 Soil: **{{ moisture }}%** - 💡 Light: **{{
+              light }} lux** - 👤 Presence: **{{ 'Yes' if presence else 'No' }}
+
+              **{{ states('input_text.plant_alert_message') }}**
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: custom:button-card
+            name: ALERT
+            icon: mdi:alert
+            show_state: true
+            state:
+              - operator: template
+                value: |
+                  [[[ 
+                    return (states['sensor.greenhouse_temperature']?.state || 0) > 30;
+                  ]]]
+                styles:
+                  card:
+                    - background-color: red
+                    - animation: blink 1s infinite
+                    - transform: scale(1.02)
+                    - box-shadow: 0 0 20px rgba(255,0,0,0.8)
+                  icon:
+                    - color: white
+                    - transform: scale(1.3)
+              - operator: template
+                value: |
+                  [[[ 
+                    return (states['input_number.greenhouse_light_level']?.state || 0) < 100;
+                  ]]]
+                styles:
+                  card:
+                    - background-color: orange
+                    - animation: pulse 0.8s infinite
+                    - transform: scale(1.02)
+                    - box-shadow: 0 0 20px rgba(255,165,0,0.8)
+                  icon:
+                    - transform: scale(1.2)
+            styles:
+              card:
+                - height: 120px
+                - color: white
+                - background-color: '#444'
+                - border-radius: 12px
+                - font-size: 18px
+                - font-weight: bold
+              icon:
+                - width: 48px
+                - height: 48px
+                - margin-right: 8px
+              name:
+                - font-size: 20px
+                - font-weight: bold
+              state:
+                - font-size: 24px
+                - font-weight: bold
+            extra_styles: |
+              @keyframes blink {
+                0% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(255,0,0,0); }
+                50% { opacity: 0.7; transform: scale(1.05); box-shadow: 0 0 30px rgba(255,0,0,0.9); }
+                100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(255,0,0,0); }
+              }
+              @keyframes pulse {
+                0% { transform: scale(1); box-shadow: 0 0 0px rgba(255,165,0,0); }
+                50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(255,165,0,1); }
+                100% { transform: scale(1); box-shadow: 0 0 0px rgba(255,165,0,0); }
+              }
+      - type: grid
+        column_span: 2
+        cards:
+          - type: heading
+            heading: 🤖 AI Analysis
+          - type: markdown
+            content: >
+              | | |
+
+              |---|---|
+
+              | **Alert Type** | {{
+              states('sensor.greenhouse_automation_action') }} |
+
+              | **Priority** | {{
+              state_attr('sensor.greenhouse_automation_action', 'priority') }} |
+
+              | **Message** | {{ states('input_text.plant_alert_message') }} |
+
+              | **Alert Level** | {{ states('input_text.plant_alert_level') }} |
+
+              | **Fan Action** | {{
+              state_attr('sensor.greenhouse_automation_action', 'fan') }} |
+
+              | **Misting** | {{
+              state_attr('sensor.greenhouse_automation_action', 'misting') }} |
+
+              | **Soil Moisture** | {{ states('input_number.soil_moisture') |
+              float | int }}% |
+
+              | **Recommendations** | {{
+              state_attr('sensor.greenhouse_automation_action',
+              'recommendations') }} |
+
+              | **Last Updated** | {{
+              state_attr('sensor.greenhouse_automation_action', 'last_updated')
+              }} |
+            grid_options:
+              columns: full
+              rows: 5
+          - type: custom:apexcharts-card
+            graph_span: 24h
+            span:
+              start: day
+            header:
+              title: 📊 Greenhouse Climate
+            apex_config:
+              chart:
+                animations:
+                  enabled: true
+                  easing: easeinout
+                  speed: 800
+              yaxis:
+                - seriesName: Greenhouse Temp
+                  min: 0
+                  max: 40
+                  labels:
+                    style:
+                      colors: '#F44336'
+                - seriesName: Greenhouse Humidity
+                  opposite: true
+                  min: 0
+                  max: 100
+                  labels:
+                    style:
+                      colors: '#2196F3'
+              tooltip:
+                shared: true
+              grid:
+                borderColor: '#444'
+              stroke:
+                width:
+                  - 3
+                  - 3
+            series:
+              - entity: sensor.greenhouse_temperature
+                name: GH Temp 🌡️
+                type: line
+                color: '#F44336'
+                curve: smooth
+              - entity: sensor.greenhouse_humidity
+                name: GH Humidity 💧
+                type: line
+                color: '#2196F3'
+                curve: smooth
+              - entity: weather.home
+                attribute: temperature
+                name: Outside Temp 🌤️
+                type: line
+                color: '#FFEB3B'
+                curve: smooth
+      - type: grid
+        cards:
+          - type: heading
+            heading: 🌤️ EXTERNAL WEATHER CARD
+            heading_style: title
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.home
+            name: 🌤️ Outside Weather
+            forecast_type: daily
+            grid_options:
+              columns: full
+              rows: 4
+        column_span: 2
