@@ -1,84 +1,155 @@
 views:
   - title: 🌈 Plant Health
     icon: mdi:palette
+    path: plant_health
+    badges: []
     cards:
       - type: markdown
         content: |
           # 🌿 Plant Health Monitor 🌸
           Your colorful greenhouse companion
-      - show_state: true
-        show_name: true
-        camera_view: live
-        fit_mode: cover
-        type: picture-entity
+          _Monitor confidence, health, and care tips in one place_
+      - type: picture-entity
         entity: camera.esp32_cam_esp32_cam
-        aspect_ratio: '16:9'
         name: 🌸 Plant Cam
+        camera_view: live
+        aspect_ratio: '16:9'
+        fit_mode: cover
+        show_name: true
+        show_state: true
+        styles:
+          card:
+            - border-radius: 20px
+            - box-shadow: 0 10px 20px rgba(0,0,0,0.25)
+            - transition: all 0.5s ease
+            - animation: glow 3s infinite alternate
+        card_mod:
+          style: |
+            @keyframes glow {
+              0% { box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+              100% { box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+            }
       - type: grid
         columns: 2
         square: true
         cards:
-          - type: entity
+          - type: custom:button-card
             entity: input_number.plant_confidence
             name: 🌟 Confidence Score
             icon: mdi:star-shooting
-            state_color: true
+            show_state: true
+            state:
+              - operator: default
+                styles:
+                  card:
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(entity.state || 0);
+                          if(val < 30) return 'linear-gradient(135deg, #F44336, #FF7961)';
+                          if(val < 70) return 'linear-gradient(135deg, #FFC107, #FFD54F)';
+                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                        ]]]
+                    - color: white
+                    - font-weight: bold
+                    - border-radius: 25px
+                    - padding: 20px
+                    - text-align: center
+                  icon:
+                    - color: '#FFD700'
+                    - font-size: 64px
+                  name:
+                    - font-size: 20px
+                    - font-weight: bold
+                  state:
+                    - font-size: 48px
+                    - font-weight: bold
             styles:
               card:
-                - border-radius: 25px
-                - background: linear-gradient(135deg,
-                - padding: 30px
-                - text-align: center
-              icon:
-                - color: '#FFD700'
-                - font-size: 64px
-              name:
-                - font-size: 20px
-                - font-weight: bold
-              state:
-                - font-size: 48px
-                - font-weight: bold
-          - type: entity
+                - transition: all 1s ease
+                - animation: pulse 2s infinite
+            card_mod:
+              style: |
+                @keyframes pulse {
+                  0% { transform: scale(1); }
+                  50% { transform: scale(1.05); }
+                  100% { transform: scale(1); }
+                }
+          - type: custom:button-card
             entity: input_text.plant_health_status
             name: 💚 Plant Health
             icon: mdi:heart
-            state_color: true
+            show_state: true
+            state:
+              - operator: default
+                styles:
+                  card:
+                    - background: |
+                        [[[ 
+                          let text = entity.state.toLowerCase();
+                          if(text.includes('low')) return 'linear-gradient(135deg, #F44336, #FF7961)';
+                          if(text.includes('good')) return 'linear-gradient(135deg, #FFC107, #FFD54F)';
+                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                        ]]]
+                    - border-radius: 25px
+                    - padding: 20px
+                    - text-align: center
+                    - color: white
+                  icon:
+                    - font-size: 64px
+                  name:
+                    - font-size: 20px
+                    - font-weight: bold
+                  state:
+                    - font-size: 28px
+                    - font-weight: bold
             styles:
               card:
-                - border-radius: 25px
-                - background: linear-gradient(135deg,
-                - padding: 30px
-                - text-align: center
-              icon:
-                - color: '#FF6B6B'
-                - font-size: 64px
-              name:
-                - font-size: 20px
-                - font-weight: bold
-              state:
-                - font-size: 28px
-                - font-weight: bold
-      - square: false
-        type: grid
-        columns: 1
-        cards:
-          - type: gauge
-            entity: input_number.plant_confidence
-            name: 🌟 Detection Confidence
-            unit: '%'
-            min: 0
-            max: 100
-            needle: true
-            severity:
-              green: 70
-              yellow: 40
-              red: 20
+                - transition: all 1s ease
+                - animation: glow 2.5s infinite alternate
+            card_mod:
+              style: |
+                @keyframes glow {
+                  0% { box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+                  50% { box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+                  100% { box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+                }
+      - type: gauge
+        entity: input_number.plant_confidence
+        name: 🌟 Detection Confidence
+        unit: '%'
+        min: 0
+        max: 100
+        needle: true
+        severity:
+          green: 70
+          yellow: 40
+          red: 20
+        style: |
+          ha-card {
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            transition: all 0.5s ease;
+            background: linear-gradient(135deg, #e0f7fa, #e8f5e9);
+            font-weight: bold;
+          }
+          .gauge__needle {
+            animation: swing 1s ease-in-out infinite alternate;
+          }
+          .gauge__value {
+            font-size: 32px;
+            color: #333;
+            font-weight: bold;
+            transition: all 0.3s ease;
+          }
+        extra_styles: |
+          @keyframes swing {
+            0% { transform: rotate(-5deg); }
+            100% { transform: rotate(5deg); }
+          }
       - type: grid
         columns: 3
         cards:
-          - show_name: true
-            show_icon: true
-            type: button
+          - type: custom:button-card
             name: 📸 Take Photo
             icon: mdi:camera
             tap_action:
@@ -89,43 +160,78 @@ views:
                 filename: >-
                   /config/www/snapshots/plant_{{ now().strftime('%Y%m%d_%H%M%S')
                   }}.jpg
-          - show_name: true
-            show_icon: true
-            type: button
+            styles:
+              card:
+                - height: 120px
+                - width: 120px
+                - border-radius: 15px
+                - display: flex
+                - justify-content: center
+                - align-items: center
+                - background: linear-gradient(135deg,
+                - color: white
+                - font-weight: bold
+                - animation: glow 2s infinite
+              name:
+                - font-size: 14px
+                - text-align: center
+            card_mod:
+              style: |
+                @keyframes glow {
+                  0% { box-shadow: 0 0 5px #E040FB; }
+                  50% { box-shadow: 0 0 20px #E040FB; }
+                  100% { box-shadow: 0 0 5px #E040FB; }
+                }
+          - type: custom:button-card
             name: 🌸 Open Camera
             icon: mdi:webcam
             tap_action:
               action: url
               url_path: http://10.166.18.200
-      - type: history-graph
-        title: 📈 Plant Health Journey
-        entities:
-          - entity: sensor.plant_confidence
-            name: 🌟 Confidence
-          - entity: sensor.plant_health_percentage
-            name: 💚 Vitality
-        hours_to_show: 168
+            styles:
+              card:
+                - height: 120px
+                - width: 120px
+                - border-radius: 15px
+                - display: flex
+                - justify-content: center
+                - align-items: center
+                - background: linear-gradient(135deg,
+                - color: white
+                - font-weight: bold
+                - animation: pulse 2s infinite
+              name:
+                - font-size: 14px
+                - text-align: center
+            card_mod:
+              style: |
+                @keyframes pulse {
+                  0% { transform: scale(1); }
+                  50% { transform: scale(1.05); }
+                  100% { transform: scale(1); }
+                }
       - type: markdown
-        content: |
-          ## 🌱 Plant Care Tips
+        content: |2-
 
-          {% set confidence = states('sensor.plant_confidence') | float(0) %}
+            ## 🌱 Plant Care Tips
 
-          {% if confidence < 30 %}
-          ### ⚠️ Low confidence detection
-          - 📷 Move camera closer to plant
-          - 💡 Improve lighting conditions
-          - 🌿 Center the plant in frame
+            {% set confidence = states('input_number.plant_confidence') | float(0) %}
 
-          {% elif confidence < 70 %}
-          ### 🟡 Good detection - can improve
-          - 📸 Take photo from different angle
-          - ☀️ Ensure bright, indirect light
-          - 💧 Check soil moisture
+            {% if confidence < 30 %}
+            ### ⚠️ Low confidence detection
+            - 📷 Move camera closer to plant
+            - 💡 Improve lighting conditions
+            - 🌿 Center the plant in frame
 
-          {% else %}
-          ### ✅ Excellent plant health!
-          - 🌱 Continue current care routine
-          - 💧 Water when top soil is dry
-          - 🌸 Watch for new growth
-          {% endif %}
+            {% elif confidence < 70 %}
+            ### 🟡 Good detection - can improve
+            - 📸 Take photo from different angle
+            - ☀️ Ensure bright, indirect light
+            - 💧 Check soil moisture
+
+            {% else %}
+            ### ✅ Excellent plant health!
+            - 🌱 Continue current care routine
+            - 💧 Water when top soil is dry
+            - 🌸 Watch for new growth
+            {% endif %}
