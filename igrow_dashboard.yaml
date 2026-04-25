@@ -1,397 +1,1167 @@
 views:
-  - type: sections
-    title: 🌱 iGrow Smart Greenhouse
-    sections:
-      - type: grid
-        column_span: 4
+  - title: Environment
+    icon: mdi:leaf
+    path: environment
+    type: masonry
+    badges: []
+    cards:
+      - type: horizontal-stack
         cards:
-          - type: markdown
-            content: |
-              # 🌱 iGrow Smart Greenhouse
-              ### Live Monitoring & Control System
-            style: |
-              ha-card {
-                background: linear-gradient(135deg, #1b5e20, #66bb6a);
-                color: white;
-                padding: 25px;
-                border-radius: 18px;
-                text-align: center;
-                font-size: 18px;
-              }
-      - type: grid
-        column_span: 2
-        cards:
-          - type: heading
-            heading: 📊 Live Environment
-          - type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                entity: sensor.greenhouse_temperature
-                name: Temperature
-                show_state: true
-                icon: mdi:thermometer
-                styles:
-                  card:
-                    - height: 150px
-                    - width: 150px
-                    - border-radius: 12px
-                    - transition: all 1s ease
-                    - background: |
-                        [[[ 
-                          let val = parseFloat(entity?.state) || 0;
-                          if(val < 10) return 'linear-gradient(135deg, #2196F3, #64B5F6)';
-                          if(val < 25) return 'linear-gradient(135deg, #4CAF50, #81C784)';
-                          if(val < 35) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
-                          return 'linear-gradient(135deg, #F44336, #E57373)';
-                        ]]]
-                  icon:
-                    - animation: spin 2s linear infinite
-                card_mod:
-                  style: |
-                    @keyframes spin { 100% { transform: rotate(360deg); } }
-              - type: custom:button-card
-                entity: sensor.greenhouse_humidity
-                name: Humidity
-                show_state: true
-                icon: mdi:water-percent
-                styles:
-                  card:
-                    - height: 150px
-                    - width: 150px
-                    - border-radius: 12px
-                    - transition: all 1s ease
-                    - background: |
-                        [[[ 
-                          let val = parseFloat(entity?.state) || 0;
-                          if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
-                          if(val < 60) return 'linear-gradient(135deg, #4CAF50, #81C784)';
-                          return 'linear-gradient(135deg, #2196F3, #64B5F6)';
-                        ]]]
-                  icon:
-                    - animation: spin 2s linear infinite
-                card_mod:
-                  style: |
-                    @keyframes spin { 100% { transform: rotate(360deg); } }
-              - type: custom:button-card
-                entity: input_number.soil_moisture
-                name: Soil Moisture
-                show_state: true
-                icon: mdi:leaf
-                styles:
-                  card:
-                    - height: 150px
-                    - width: 150px
-                    - border-radius: 12px
-                    - transition: all 1s ease
-                    - background: |
-                        [[[ 
-                          let val = parseFloat(states['input_number.soil_moisture']?.state) || 0;
-                          if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
-                          if(val < 70) return 'linear-gradient(135deg, #4CAF50, #81C784)';
-                          return 'linear-gradient(135deg, #2196F3, #64B5F6)';
-                        ]]]
-                  icon:
-                    - animation: spin 2s linear infinite
-                card_mod:
-                  style: |
-                    @keyframes spin { 100% { transform: rotate(360deg); } }
-              - type: custom:button-card
-                entity: input_number.greenhouse_light_level
-                name: Light
-                show_state: true
-                icon: mdi:brightness-5
-                styles:
-                  card:
-                    - height: 150px
-                    - width: 150px
-                    - border-radius: 12px
-                    - transition: all 1s ease
-                    - background: |
-                        [[[ 
-                          let val = parseFloat(states['input_number.greenhouse_light_level']?.state) || 0;
-                          if(val < 200) return 'linear-gradient(135deg, #F44336, #E57373)';
-                          if(val < 600) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
-                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
-                        ]]]
-                  icon:
-                    - animation: spin 2s linear infinite
-                card_mod:
-                  style: |
-                    @keyframes spin { 100% { transform: rotate(360deg); } }
-      - type: grid
-        column_span: 1
-        cards:
-          - type: heading
-            heading: 🎛️ Control Panel
-          - type: grid
-            columns: 3
-            square: true
-            cards:
-              - type: custom:button-card
-                entity: input_boolean.light_virtual
-                name: 💡 LIGHT
-                icon: mdi:lightbulb
-                tap_action:
-                  action: call-service
-                  service: script.toggle_light_virtual
-                state:
-                  - value: 'on'
-                    styles:
-                      card:
-                        - box-shadow: 0px 0px 20px 5px
-                styles:
-                  card:
-                    - height: 120px
-                    - width: 120px
-                    - color: white
-                    - background-color: >
-                        [[[ return entity.state === 'on' ? '#4CAF50' : '#444';
-                        ]]]
-              - type: custom:button-card
-                entity: input_boolean.fan_virtual
-                name: 🌬️ FAN
-                icon: mdi:fan
-                tap_action:
-                  action: call-service
-                  service: script.toggle_fan_virtual
-                state:
-                  - value: 'on'
-                    styles:
-                      icon:
-                        - animation: spin 1.5s linear infinite
-                styles:
-                  card:
-                    - height: 120px
-                    - width: 120px
-                    - color: white
-                    - background-color: >
-                        [[[ return entity.state === 'on' ? '#2196F3' : '#444';
-                        ]]]
-                card_mod:
-                  style: |
-                    @keyframes spin {
-                      100% { transform: rotate(360deg); }
-                    }
-              - type: custom:button-card
-                entity: input_boolean.pump_virtual
-                name: 💧 PUMP
-                icon: mdi:water-pump
-                tap_action:
-                  action: call-service
-                  service: script.toggle_pump_virtual
-                state:
-                  - value: 'on'
-                    styles:
-                      card:
-                        - animation: pulse 1.5s infinite
-                styles:
-                  card:
-                    - height: 120px
-                    - width: 120px
-                    - color: white
-                    - background-color: >
-                        [[[ return entity.state === 'on' ? '#00BCD4' : '#444';
-                        ]]]
-                card_mod:
-                  style: |
-                    @keyframes pulse {
-                      50% { transform: scale(1.05); }
-                    }
-            grid_options:
-              rows: auto
-              columns: full
-      - type: grid
-        column_span: 1
-        cards:
-          - type: heading
-            heading: ⚠️ Smart Alerts
-          - type: markdown
-            content: >
-              {% set temp = states('sensor.greenhouse_temperature') | float(0)
-              %} {% set humidity = states('sensor.greenhouse_humidity') |
-              float(0) %} {% set moisture = states('input_number.soil_moisture')
-              | float(0) %} {% set light =
-              states('input_number.greenhouse_light_level') | float(0) %} {% set
-              presence = is_state('input_boolean.greenhouse_presence','on') %}
-              {% set priority =
-              state_attr('sensor.greenhouse_automation_action','priority') %}
-
-              {% if priority == 'critical' %} ## 🚨 CRITICAL CONDITION {% elif
-              priority == 'high' %} ## 🔥 HIGH ALERT {% else %} ## ✅ STABLE
-              CONDITIONS {% endif %}
-
-              **Environment** - 🌡️ Temp: **{{ temp }}°C** - 💧 Humidity: **{{
-              humidity }}%** - 🌱 Soil: **{{ moisture }}%** - 💡 Light: **{{
-              light }} lux** - 👤 Presence: **{{ 'Yes' if presence else 'No' }}
-
-              **{{ states('input_text.plant_alert_message') }}**
-            grid_options:
-              columns: 12
-              rows: auto
           - type: custom:button-card
-            name: ALERT
-            icon: mdi:alert
+            entity: sensor.greenhouse_sensor_greenhouse_temperature_2
+            name: Temperature
             show_state: true
+            icon: mdi:thermometer
+            styles:
+              card:
+                - height: 150px
+                - width: 150px
+                - border-radius: 12px
+                - transition: all 1s ease
+                - background: |
+                    [[[ 
+                      let val = parseFloat(entity?.state) || 0;
+                      if(val < 10) return 'linear-gradient(135deg, #2196F3, #64B5F6)';
+                      if(val < 25) return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                      if(val < 35) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                      return 'linear-gradient(135deg, #F44336, #E57373)';
+                    ]]]
+          - type: custom:button-card
+            entity: sensor.greenhouse_sensor_greenhouse_humidity_2
+            name: Humidity
+            show_state: true
+            icon: mdi:water-percent
+            styles:
+              card:
+                - height: 150px
+                - width: 150px
+                - border-radius: 12px
+                - transition: all 1s ease
+                - background: |
+                    [[[ 
+                      let val = parseFloat(entity?.state) || 0;
+                      if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
+                      if(val < 60) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                      return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                    ]]]
+          - type: custom:button-card
+            entity: sensor.soil_moisture_sensor
+            name: Soil Moisture
+            show_state: true
+            icon: mdi:leaf
+            styles:
+              card:
+                - height: 150px
+                - width: 150px
+                - border-radius: 12px
+                - transition: all 1s ease
+                - background: |
+                    [[[ 
+                      let val = parseFloat(entity?.state) || 0;
+                      if(val < 30) return 'linear-gradient(135deg, #F44336, #E57373)';
+                      if(val < 70) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                      return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                    ]]]
+          - type: custom:button-card
+            entity: sensor.greenhouse_light_level
+            name: Light
+            show_state: true
+            icon: mdi:brightness-5
+            styles:
+              card:
+                - height: 150px
+                - width: 150px
+                - border-radius: 12px
+                - transition: all 1s ease
+                - background: |
+                    [[[ 
+                      let val = parseFloat(entity?.state) || 0;
+                      if(val < 200) return 'linear-gradient(135deg, #F44336, #E57373)';
+                      if(val < 600) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+                      return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                    ]]]
+      - type: custom:statistics-graph-chart-card
+        card_header: 🌿 Full Thermal Overview
+        hours_to_show: 48
+        entities:
+          - entity: sensor.greenhouse_heat_index
+            name: Feels Like
+            color: '#FF9800'
+          - entity: sensor.greenhouse_absolute_humidity
+            name: Abs. Humidity
+            color: '#2196F3'
+            y_axis: secondary
+          - entity: sensor.greenhouse_vpd
+            name: VPD
+            color: '#4CAF50'
+          - entity: sensor.greenhouse_dew_point
+            name: Dew Point
+            color: '#9C27B0'
+      - clock_style: digital
+        clock_size: large
+        show_seconds: true
+        no_background: true
+        type: clock
+        time_zone: Africa/Algiers
+        face_style: markers
+    theme: agriculture_green
+    show_icon_and_title: true
+  - title: Controls
+    icon: mdi:toggle-switch
+    path: controls
+    type: masonry
+    badges: []
+    cards:
+      - type: heading
+        heading: 🎛️ Control Panel
+        heading_style: title
+      - type: grid
+        columns: 3
+        square: true
+        cards:
+          - type: custom:button-card
+            entity: input_boolean.light_virtual
+            name: 💡 LIGHT
+            icon: mdi:lightbulb
+            tap_action:
+              action: call-service
+              service: script.toggle_light_virtual
             state:
-              - operator: template
-                value: |
-                  [[[ 
-                    return (states['sensor.greenhouse_temperature']?.state || 0) > 30;
-                  ]]]
+              - value: 'on'
                 styles:
                   card:
-                    - background-color: red
-                    - animation: blink 1s infinite
-                    - transform: scale(1.02)
-                    - box-shadow: 0 0 20px rgba(255,0,0,0.8)
-                  icon:
-                    - color: white
-                    - transform: scale(1.3)
-              - operator: template
-                value: |
-                  [[[ 
-                    return (states['input_number.greenhouse_light_level']?.state || 0) < 100;
-                  ]]]
-                styles:
-                  card:
-                    - background-color: orange
-                    - animation: pulse 0.8s infinite
-                    - transform: scale(1.02)
-                    - box-shadow: 0 0 20px rgba(255,165,0,0.8)
-                  icon:
-                    - transform: scale(1.2)
+                    - box-shadow: 0px 0px 20px 5px rgba(76,175,80,0.8)
             styles:
               card:
                 - height: 120px
+                - width: 120px
                 - color: white
-                - background-color: '#444'
-                - border-radius: 12px
-                - font-size: 18px
+                - background-color: |
+                    [[[ return entity.state === 'on' ? '#4CAF50' : '#444'; ]]]
+          - type: custom:button-card
+            entity: input_boolean.fan_virtual
+            name: 🌬️ FAN
+            icon: mdi:fan
+            tap_action:
+              action: call-service
+              service: script.toggle_fan_virtual
+            state:
+              - value: 'on'
+                styles:
+                  icon:
+                    - animation: spin 1.5s linear infinite
+            styles:
+              card:
+                - height: 120px
+                - width: 120px
+                - color: white
+                - background-color: |
+                    [[[ return entity.state === 'on' ? '#2196F3' : '#444'; ]]]
+            card_mod:
+              style: |
+                @keyframes spin {
+                  100% { transform: rotate(360deg); }
+                }
+          - type: custom:button-card
+            entity: input_boolean.pump_virtual
+            name: 💧 PUMP
+            icon: mdi:water-pump
+            tap_action:
+              action: call-service
+              service: script.toggle_pump_virtual
+            state:
+              - value: 'on'
+                styles:
+                  card:
+                    - animation: pulse 1.5s infinite
+            styles:
+              card:
+                - height: 120px
+                - width: 120px
+                - color: white
+                - background-color: |
+                    [[[ return entity.state === 'on' ? '#00BCD4' : '#444'; ]]]
+            card_mod:
+              style: |
+                @keyframes pulse {
+                  50% { transform: scale(1.05); }
+                }
+        grid_options:
+          rows: auto
+          columns: full
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: input_boolean.greenhouse_presence
+            name: 👤 Presence
+            icon: mdi:motion-sensor
+            layout: vertical
+            tap_action:
+              action: toggle
+            styles:
+              card:
+                - border-radius: 22px
+                - padding: 24px 20px
+                - background: '#EDE9FE'
+                - border: 1.5px solid
+                - box-shadow: none
+                - transition: transform 0.25s ease
+              name:
+                - color: '#6D28D9'
+                - font-size: 11px
+                - font-weight: 700
+                - letter-spacing: 0.1em
+                - text-transform: uppercase
+              icon:
+                - color: '#7C3AED'
+                - font-size: 34px
+              state:
+                - color: '#3B0764'
+                - font-size: 24px
+                - font-weight: 800
+          - type: custom:mushroom-entity-card
+            entity: input_number.greenhouse_light_level
+            name: 💡 Light Level
+            icon: mdi:brightness-5
+            layout: vertical
+            styles:
+              card:
+                - border-radius: 22px
+                - padding: 24px 20px
+                - background: '#FFFBEB'
+                - border: 1.5px solid
+                - box-shadow: none
+                - transition: transform 0.25s ease
+              name:
+                - color: '#B45309'
+                - font-size: 11px
+                - font-weight: 700
+                - letter-spacing: 0.1em
+                - text-transform: uppercase
+              icon:
+                - color: '#D97706'
+                - font-size: 34px
+              state:
+                - color: '#78350F'
+                - font-size: 24px
+                - font-weight: 800
+          - type: custom:mushroom-template-card
+            primary: Light Status
+            secondary: >
+              {% set light = states('input_number.greenhouse_light_level') |
+              float(0) %}
+
+              {% set presence = is_state('input_boolean.greenhouse_presence',
+              'on') %}
+
+              {% if light < 350 and presence %}💡 Lights ON — auto triggered
+
+              {% elif light < 350 and not presence %}⏸ Dark — waiting for
+              presence
+
+              {% elif light >= 350 and presence %}☀️ Enough light — lights OFF
+
+              {% else %}💤 No presence — idle{% endif %}
+            icon: mdi:lightbulb-auto
+            icon_color: >
+              {% set light = states('input_number.greenhouse_light_level') |
+              float(0) %}
+
+              {% set presence = is_state('input_boolean.greenhouse_presence',
+              'on') %}
+
+              {% if light < 350 and presence %}amber
+
+              {% elif light >= 350 %}green
+
+              {% else %}blue{% endif %}
+            layout: vertical
+            styles:
+              card:
+                - border-radius: 22px
+                - padding: 24px 20px
+                - background: '#F0FDFA'
+                - border: 1.5px solid
+                - box-shadow: none
+                - transition: transform 0.25s ease
+              name:
+                - color: '#0F766E'
+                - font-size: 11px
+                - font-weight: 700
+                - letter-spacing: 0.1em
+                - text-transform: uppercase
+              icon:
+                - color: '#0D9488'
+                - font-size: 34px
+              state:
+                - color: '#134E4A'
+                - font-size: 20px
+                - font-weight: 800
+          - type: custom:mushroom-template-card
+            primary: VPD Status
+            secondary: >
+              {% set vpd = states('sensor.greenhouse_vpd') | float(0) | round(2)
+              %}
+
+              {% if vpd < 0.4 %}🔵 {{ vpd }} kPa — Too wet
+
+              {% elif vpd < 0.8 %}✅ {{ vpd }} kPa — Propagation
+
+              {% elif vpd < 1.2 %}✅ {{ vpd }} kPa — Veg ideal
+
+              {% elif vpd < 1.6 %}✅ {{ vpd }} kPa — Flower ideal
+
+              {% else %}🔴 {{ vpd }} kPa — Plant stress{% endif %}
+            icon: mdi:leaf-circle
+            icon_color: |
+              {% set vpd = states('sensor.greenhouse_vpd') | float(0) %}
+              {% if vpd < 0.4 %}blue
+              {% elif vpd <= 1.6 %}green
+              {% else %}red{% endif %}
+            layout: vertical
+            styles:
+              card:
+                - border-radius: 22px
+                - padding: 24px 20px
+                - background: '#F0FDF4'
+                - border: 1.5px solid
+                - box-shadow: none
+                - transition: transform 0.25s ease
+              name:
+                - color: '#166534'
+                - font-size: 11px
+                - font-weight: 700
+                - letter-spacing: 0.1em
+                - text-transform: uppercase
+              icon:
+                - font-size: 34px
+              state:
+                - color: '#14532D'
+                - font-size: 20px
+                - font-weight: 800
+      - type: markdown
+        content: >
+          ## 🤖 Automation Status
+
+
+          {% set temp =
+          states('sensor.greenhouse_sensor_greenhouse_temperature_2') | float(0)
+          | round(1) %}
+
+          {% set moisture = states('input_number.soil_moisture') | float(0) |
+          round(1) %}
+
+          {% set light = states('input_number.greenhouse_light_level') |
+          float(0) | int %}
+
+          {% set presence = states('input_boolean.greenhouse_presence') %}
+
+          {% set fan = states('input_boolean.fan_virtual') %}
+
+          {% set pump = states('input_boolean.pump_virtual') %}
+
+          {% set lights = states('input_boolean.light_virtual') %}
+
+          {% set vpd = states('sensor.greenhouse_vpd') | float(0) | round(2) %}
+
+          {% set humidity =
+          states('sensor.greenhouse_sensor_greenhouse_humidity_2') | float(0) |
+          round(1) %}
+
+
+          | Automation | Condition | State |
+
+          |:-----------|:----------|:-----:|
+
+          | 💡 Grow Light | Light < 350 lux + Presence ON | {% if light < 350
+          and presence == 'on' %}🟢 Active{% elif presence == 'off' %}⏸️
+          Waiting{% else %}⚫ Idle{% endif %} |
+
+          | 🌬️ Fan | Temperature > 30°C | {% if temp > 30 %}🟢 Should be ON{%
+          elif fan == 'on' %}🟢 Running{% else %}⚫ Not needed{% endif %} |
+
+          | 💧 Pump | Soil Moisture < 30% | {% if moisture < 30 %}🟢 Should be
+          ON{% elif pump == 'on' %}🟢 Running{% else %}⚫ Not needed{% endif %} |
+
+          | 🌬️ Fan | VPD > 1.6 kPa | {% if vpd > 1.6 %}⚠️ Recommended{% else
+          %}✅ OK{% endif %} |
+
+          | 🌬️ Fan | Humidity > 80% | {% if humidity > 80 %}⚠️ Recommended{%
+          else %}✅ OK{% endif %} |
+
+
+          ---
+
+
+          📍 **Live Trigger Check**
+
+
+          | Sensor | Current | Threshold | Triggered |
+
+          |:-------|--------:|:----------|:---------:|
+
+          | ☀️ Light | {{ light }} lux | < 350 lux | {% if light < 350 %}✅ Yes{%
+          else %}❌ No{% endif %} |
+
+          | 👤 Presence | {{ presence }} | ON | {% if presence == 'on' %}✅ Yes{%
+          else %}❌ No{% endif %} |
+
+          | 🌡️ Temperature | {{ temp }}°C | > 30°C | {% if temp > 30 %}✅ Yes{%
+          else %}❌ No{% endif %} |
+
+          | 🌱 Soil | {{ moisture }}% | < 30% | {% if moisture < 30 %}✅ Yes{%
+          else %}❌ No{% endif %} |
+
+          | 🌿 VPD | {{ vpd }} kPa | > 1.6 | {% if vpd > 1.6 %}✅ Yes{% else %}❌
+          No{% endif %} |
+
+          | 💧 Humidity | {{ humidity }}% | > 80% | {% if humidity > 80 %}✅
+          Yes{% else %}❌ No{% endif %} |
+
+
+          ---
+
+
+          ⚙️ **Actuator Status** &nbsp; 💡 {% if lights == 'on' %}🟢 Light ON{%
+          else %}⚫ Light OFF{% endif %} &nbsp;·&nbsp; 🌬️ {% if fan == 'on' %}🟢
+          Fan ON{% else %}⚫ Fan OFF{% endif %} &nbsp;·&nbsp; 💧 {% if pump ==
+          'on' %}🟢 Pump ON{% else %}⚫ Pump OFF{% endif %}
+
+
+          ---
+
+
+          🧠 **Smart Suggestions**
+
+
+          {% if temp > 30 and fan == 'off' %}— ⚠️ Temperature is {{ temp }}°C ·
+          **turn ON fan now**
+
+          {% endif %}
+
+          {%- if moisture < 30 and pump == 'off' %}— 🚨 Soil at {{ moisture }}%
+          · **turn ON pump now**
+
+          {% endif %}
+
+          {%- if light < 350 and presence == 'on' and lights == 'off' %}— 💡
+          Dark + presence detected · **turn ON grow light**
+
+          {% endif %}
+
+          {%- if vpd > 1.6 and fan == 'off' %}— 🌿 VPD {{ vpd }} kPa · **run fan
+          to lower humidity**
+
+          {% endif %}
+
+          {%- if humidity > 80 and fan == 'off' %}— 🍄 Humidity {{ humidity }}%
+          · **run fan to prevent mold**
+
+          {% endif %}
+
+          {%- if temp <= 30 and moisture >= 30 and (light >= 350 or presence ==
+          'off') and vpd <= 1.6 and humidity <= 80 %}— ✅ All automations
+          satisfied · no action needed
+
+          {% endif %}
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 20px;
+              background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
+              padding: 20px;
+              font-size: 14px;
+              border: 1px solid #c8e6c9;
+            }
+    theme: agriculture_green
+    show_icon_and_title: true
+  - title: Health
+    icon: mdi:heart-pulse
+    path: health
+    type: masonry
+    badges: []
+    cards:
+      - type: vertical-stack
+        view_layout:
+          grid-column: 1 / -1
+        cards:
+          - type: heading
+            heading: 🌿 Climate Intelligence
+            heading_style: title
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: sensor.greenhouse_vpd
+                name: VPD
+                show_state: true
+                icon: mdi:leaf-circle
+                styles:
+                  card:
+                    - height: 130px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          let v = parseFloat(entity?.state) || 0;
+                          if(v < 0.4) return 'linear-gradient(135deg,#2196F3,#64B5F6)';
+                          if(v < 0.8) return 'linear-gradient(135deg,#4CAF50,#81C784)';
+                          if(v < 1.2) return 'linear-gradient(135deg,#8BC34A,#AED581)';
+                          if(v < 1.6) return 'linear-gradient(135deg,#FFEB3B,#FFC107)';
+                          return 'linear-gradient(135deg,#F44336,#E57373)';
+                        ]]]
+              - type: custom:button-card
+                entity: sensor.greenhouse_dew_point
+                name: Dew Point
+                show_state: true
+                icon: mdi:water-thermometer
+                styles:
+                  card:
+                    - height: 130px
+                    - border-radius: 12px
+                    - background: linear-gradient(135deg,
+              - type: custom:button-card
+                entity: sensor.greenhouse_heat_index
+                name: Feels Like
+                show_state: true
+                icon: mdi:thermometer-alert
+                styles:
+                  card:
+                    - height: 130px
+                    - border-radius: 12px
+                    - background: |
+                        [[[
+                          let v = parseFloat(entity?.state) || 0;
+                          if(v < 27) return 'linear-gradient(135deg,#4CAF50,#81C784)';
+                          if(v < 32) return 'linear-gradient(135deg,#FFEB3B,#FFC107)';
+                          return 'linear-gradient(135deg,#F44336,#E57373)';
+                        ]]]
+              - type: custom:button-card
+                entity: sensor.greenhouse_absolute_humidity
+                name: Abs. Humidity
+                show_state: true
+                icon: mdi:air-humidifier
+                styles:
+                  card:
+                    - height: 130px
+                    - border-radius: 12px
+                    - background: linear-gradient(135deg,
+          - type: markdown
+            content: |
+              ### 🌿 VPD Guide (Vapor Pressure Deficit)
+              | VPD (kPa) | Plant Stage | Action |
+              |-----------|-------------|--------|
+              | < 0.4 | 🌱 Propagation | ✅ Good |
+              | 0.4–0.8 | 🌿 Early veg | ✅ Ideal |
+              | 0.8–1.2 | 🌳 Late veg | ✅ Ideal |
+              | 1.2–1.6 | 🌸 Flowering | ✅ Ideal |
+              | > 1.6 | ⚠️ Any stage | 💧 Raise humidity or cool down |
+              | < 0.4 | ⚠️ Any stage | 🌬️ Run fan / lower humidity |
+      - type: grid
+        columns: 2
+        square: true
+        cards:
+          - type: custom:button-card
+            entity: input_number.plant_confidence
+            name: 🌟 Confidence Score
+            icon: mdi:star-shooting
+            show_state: true
+            state:
+              - operator: default
+                styles:
+                  card:
+                    - background: |
+                        [[[ 
+                          let val = parseFloat(entity.state || 0);
+                          if(val < 30) return 'linear-gradient(135deg, #F44336, #FF7961)';
+                          if(val < 70) return 'linear-gradient(135deg, #FFC107, #FFD54F)';
+                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                        ]]]
+                    - color: white
+                    - font-weight: bold
+                    - border-radius: 25px
+                    - padding: 20px
+                    - text-align: center
+                  icon:
+                    - color: '#FFD700'
+                    - font-size: 64px
+                  name:
+                    - font-size: 20px
+                    - font-weight: bold
+                  state:
+                    - font-size: 48px
+                    - font-weight: bold
+            styles:
+              card:
+                - transition: all 1s ease
+                - animation: pulse 2s infinite
+            card_mod:
+              style: |
+                @keyframes pulse {
+                  0% { transform: scale(1); }
+                  50% { transform: scale(1.05); }
+                  100% { transform: scale(1); }
+                }
+          - type: custom:button-card
+            entity: input_text.plant_health_status
+            name: 💚 Plant Health
+            icon: mdi:heart
+            show_state: true
+            state:
+              - operator: default
+                styles:
+                  card:
+                    - background: |
+                        [[[ 
+                          let text = entity.state.toLowerCase();
+                          if(text.includes('low')) return 'linear-gradient(135deg, #F44336, #FF7961)';
+                          if(text.includes('good')) return 'linear-gradient(135deg, #FFC107, #FFD54F)';
+                          return 'linear-gradient(135deg, #4CAF50, #81C784)';
+                        ]]]
+                    - border-radius: 25px
+                    - padding: 20px
+                    - text-align: center
+                    - color: white
+                  icon:
+                    - font-size: 64px
+                  name:
+                    - font-size: 20px
+                    - font-weight: bold
+                  state:
+                    - font-size: 28px
+                    - font-weight: bold
+            styles:
+              card:
+                - transition: all 1s ease
+                - animation: glow 2.5s infinite alternate
+            card_mod:
+              style: |
+                @keyframes glow {
+                  0% { box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+                  50% { box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+                  100% { box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+                }
+      - type: markdown
+        content: |2-
+
+            ## 🌱 Plant Care Tips
+
+            {% set confidence = states('input_number.plant_confidence') | float(0) %}
+
+            {% if confidence < 30 %}
+            ### ⚠️ Low confidence detection
+            - 📷 Move camera closer to plant
+            - 💡 Improve lighting conditions
+            - 🌿 Center the plant in frame
+
+            {% elif confidence < 70 %}
+            ### 🟡 Good detection - can improve
+            - 📸 Take photo from different angle
+            - ☀️ Ensure bright, indirect light
+            - 💧 Check soil moisture
+
+            {% else %}
+            ### ✅ Excellent plant health!
+            - 🌱 Continue current care routine
+            - 💧 Water when top soil is dry
+            - 🌸 Watch for new growth
+            {% endif %}
+      - type: markdown
+        content: |-
+          ## 🌿 Plant Knowledge Hub
+
+            🌱 *Discover, learn, and grow smarter*
+
+            👉 **[Explore Gardenia.net](https://www.gardenia.net/)**
+
+            ---
+            ### 🌸 What is it?
+            **Gardenia.net** is a beautiful plant library filled with care guides, growing tips, and garden inspiration.
+
+            ---
+            ### 🌼 What you’ll find
+            - 🌱 Plant care basics (💧 water · ☀️ light · 🌿 soil)
+            - 🌸 Blooming seasons & growth habits  
+            - 🏡 Garden and greenhouse ideas  
+            - 🌺 Perfect plant combinations  
+
+            ---
+            💡 *Tip:* Combine this knowledge with your greenhouse sensors for perfect plant conditions 🌡️💧
+    theme: agriculture_green
+    show_icon_and_title: true
+  - title: Camera
+    icon: mdi:cctv
+    path: camera
+    type: masonry
+    badges: []
+    cards:
+      - type: picture-entity
+        entity: camera.esp32_cam_esp32_cam
+        camera_view: live
+        aspect_ratio: '16:9'
+        name: Greenhouse Camera
+        style: |
+          ha-card { border-radius: 20px; overflow: hidden; }
+      - type: grid
+        columns: 3
+        square: true
+        cards:
+          - type: custom:button-card
+            entity: camera.esp32_cam_esp32_cam
+            name: Snapshot
+            icon: mdi:camera
+            tap_action:
+              action: call-service
+              service: camera.snapshot
+              data:
+                entity_id: camera.esp32_cam_esp32_cam
+                filename: >-
+                  /config/www/snapshots/greenhouse_{{
+                  now().strftime('%Y%m%d_%H%M%S') }}.jpg
+            double_tap_action:
+              action: call-service
+              service: camera.snapshot
+              data:
+                entity_id: camera.esp32_cam_esp32_cam
+                filename: /config/www/snapshots/latest.jpg
+            styles:
+              card:
+                - background: rgb(26, 45, 35)
+                - border-radius: 16px
+                - box-shadow: 0 2px 4px rgba(0,0,0,0.1)
+                - transition: all 0.2s ease
+                - height: 100%
+                - aspect-ratio: 1 / 1
+                - display: flex
+                - flex-direction: column
+                - align-items: center
+                - justify-content: center
+                - gap: 12px
+              icon:
+                - color: rgb(76, 175, 80)
+                - width: 40px
+                - height: 40px
+              name:
+                - color: white
+                - font-size: 14px
+                - font-weight: 500
+            card_mod:
+              style: |
+                ha-card {
+                  cursor: pointer;
+                }
+                ha-card:hover {
+                  background: rgb(36, 55, 45);
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                }
+                ha-card:active {
+                  transform: scale(0.97);
+                }
+          - type: custom:button-card
+            entity: light.esp32_cam_camera_flash
+            name: Flashlight
+            icon: mdi:flashlight
+            tap_action:
+              action: toggle
+            state:
+              - value: 'on'
+                icon: mdi:flashlight
+                styles:
+                  card:
+                    - background: rgb(76, 175, 80)
+                  icon:
+                    - color: white
+                  name:
+                    - color: white
+              - value: 'off'
+                styles:
+                  card:
+                    - background: rgb(26, 45, 35)
+                  icon:
+                    - color: rgb(76, 175, 80)
+                  name:
+                    - color: white
+            styles:
+              card:
+                - border-radius: 16px
+                - box-shadow: 0 2px 4px rgba(0,0,0,0.1)
+                - transition: all 0.2s ease
+                - height: 100%
+                - aspect-ratio: 1 / 1
+                - display: flex
+                - flex-direction: column
+                - align-items: center
+                - justify-content: center
+                - gap: 12px
+              icon:
+                - width: 40px
+                - height: 40px
+              name:
+                - font-size: 14px
+                - font-weight: 500
+            card_mod:
+              style: |
+                ha-card {
+                  cursor: pointer;
+                }
+                ha-card:hover {
+                  filter: brightness(1.05);
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                }
+                ha-card:active {
+                  transform: scale(0.97);
+                }
+          - type: custom:button-card
+            name: Fullscreen
+            icon: mdi:fullscreen
+            tap_action:
+              action: more-info
+              entity: camera.esp32_cam_esp32_cam
+            styles:
+              card:
+                - background: rgb(26, 45, 35)
+                - border-radius: 16px
+                - box-shadow: 0 2px 4px rgba(0,0,0,0.1)
+                - transition: all 0.2s ease
+                - height: 100%
+                - aspect-ratio: 1 / 1
+                - display: flex
+                - flex-direction: column
+                - align-items: center
+                - justify-content: center
+                - gap: 12px
+              icon:
+                - color: rgb(76, 175, 80)
+                - width: 40px
+                - height: 40px
+              name:
+                - color: white
+                - font-size: 14px
+                - font-weight: 500
+            card_mod:
+              style: |
+                ha-card {
+                  cursor: pointer;
+                }
+                ha-card:hover {
+                  background: rgb(36, 55, 45);
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                }
+                ha-card:active {
+                  transform: scale(0.97);
+                }
+    theme: agriculture_green
+    show_icon_and_title: true
+  - title: Alerts
+    icon: mdi:robot
+    path: alerts
+    type: masonry
+    badges: []
+    cards:
+      - type: markdown
+        content: >
+          ## 📊 Current Conditions
+
+
+          {% set temp =
+          states('sensor.greenhouse_sensor_greenhouse_temperature_2') | float(0)
+          | round(1) %}
+
+          {% set humidity =
+          states('sensor.greenhouse_sensor_greenhouse_humidity_2') | float(0) |
+          round(1) %}
+
+          {% set moisture = states('input_number.soil_moisture') | float(0) |
+          round(1) %}
+
+          {% set vpd = states('sensor.greenhouse_vpd') | float(0) | round(2) %}
+
+          {% set dew = states('sensor.greenhouse_dew_point') | float(0) |
+          round(1) %}
+
+          {% set heat_index = states('sensor.greenhouse_heat_index') | float(0)
+          | round(1) %}
+
+          {% set abs_hum = states('sensor.greenhouse_absolute_humidity') |
+          float(0) | round(1) %}
+
+          {% set light = states('sensor.greenhouse_light_level') | float(0) |
+          int %}
+
+          {% set fan = states('input_boolean.fan_virtual') %}
+
+          {% set pump = states('input_boolean.pump_virtual') %}
+
+          {% set lights = states('input_boolean.light_virtual') %}
+
+
+          | Sensor | Value | Status |
+
+          |:-------|------:|:------:|
+
+          | 🌡️ Temperature | **{{ temp }}°C** | {% if temp > 35 %}🔥 Critical{%
+          elif temp > 30 %}⚠️ High{% elif temp < 10 %}🧊 Cold{% else %}✅
+          Normal{% endif %} |
+
+          | 💧 Humidity | **{{ humidity }}%** | {% if humidity > 80 %}💧 Too
+          High{% elif humidity > 70 %}⚠️ High{% elif humidity < 30 %}🌵
+          Critical{% elif humidity < 40 %}⚠️ Low{% else %}✅ Normal{% endif %} |
+
+          | 🌱 Soil Moisture | **{{ moisture }}%** | {% if moisture < 20 %}🚨
+          Water Now{% elif moisture < 30 %}⚠️ Low{% elif moisture > 85 %}⚠️
+          Overwatered{% else %}✅ Normal{% endif %} |
+
+          | 🌿 VPD | **{{ vpd }} kPa** | {% if vpd > 1.6 %}🔴 Too Dry{% elif vpd
+          < 0.4 %}🔵 Too Wet{% else %}✅ Ideal{% endif %} |
+
+          | 🌡️ Feels Like | **{{ heat_index }}°C** | {% if heat_index > 38 %}🔥
+          Dangerous{% elif heat_index > 32 %}⚠️ High{% else %}✅ OK{% endif %} |
+
+          | 💦 Dew Point | **{{ dew }}°C** | {% if dew > 16 %}⚠️ Condensation
+          Risk{% else %}✅ Safe{% endif %} |
+
+          | 💨 Abs. Humidity | **{{ abs_hum }} g/m³** | {% if abs_hum > 15 %}💧
+          High{% elif abs_hum < 6 %}🌵 Low{% else %}✅ Normal{% endif %} |
+
+          | ☀️ Light | **{{ light }} lux** | {% if light < 200 %}🌑 Too Dark{%
+          elif light < 600 %}⚠️ Low{% else %}✅ Good{% endif %} |
+
+
+          ---
+
+
+          ⚙️ **Actuators** &nbsp; 💡 {% if lights == 'on' %}🟢 ON{% else %}⚫
+          OFF{% endif %} &nbsp;·&nbsp; 🌬️ {% if fan == 'on' %}🟢 ON{% else %}⚫
+          OFF{% endif %} &nbsp;·&nbsp; 💧 {% if pump == 'on' %}🟢 ON{% else %}⚫
+          OFF{% endif %}
+
+
+          ---
+
+
+          🤖 **Recommendations**
+
+
+          {% if temp > 30 and fan == 'off' %}— ⚠️ Temp critical · turn ON fan
+
+          {% endif %}
+
+          {%- if vpd > 1.6 and pump == 'off' %}— 💧 VPD too high · run pump or
+          mist
+
+          {% endif %}
+
+          {%- if moisture < 30 and pump == 'off' %}— 🚨 Soil dry · turn ON pump
+
+          {% endif %}
+
+          {%- if humidity > 80 and fan == 'off' %}— 🍄 Humidity high · run fan
+
+          {% endif %}
+
+          {%- if dew > 16 %}— 💦 Dew point high · condensation risk
+
+          {% endif %}
+
+          {%- if light < 200 and lights == 'off' %}— 🌑 Too dark · turn ON grow
+          light
+
+          {% endif %}
+
+          {%- if temp <= 30 and humidity >= 40 and humidity <= 70 and moisture
+          >= 30 and vpd >= 0.4 and vpd <= 1.6 %}— ✅ All conditions optimal!
+
+          {% endif %}
+
+
+          ---
+
+
+          🚨 **Alert:** {{ states('input_text.plant_alert_message') }}
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 20px;
+              padding: 20px;
+              background: #fff3e0;
+              font-size: 14px;
+            }
+      - type: vertical-stack
+        cards:
+          - type: custom:button-card
+            entity: input_number.critical_alert_level
+            name: 🚨 CRITICAL SIROCCO ALERT
+            show_state: true
+            icon: mdi:weather-dust
+            state_display: '[[[ return Math.round(entity.state) + ''%'' ]]]'
+            styles:
+              card:
+                - border-radius: 20px
+                - padding: 24px
+                - background: |
+                    [[[
+                      let v = parseFloat(entity.state) || 0;
+                      if(v < 30) return 'linear-gradient(135deg,#4CAF50,#81C784)';
+                      if(v < 60) return 'linear-gradient(135deg,#FF9800,#FFB74D)';
+                      return 'linear-gradient(135deg,#F44336,#E57373)';
+                    ]]]
+                - animation: |
+                    [[[
+                      let v = parseFloat(entity.state) || 0;
+                      return v > 60 ? 'pulse 1.2s infinite' : 'none';
+                    ]]]
+              name:
+                - color: white
+                - font-size: 14px
+                - font-weight: 700
+                - letter-spacing: 0.05em
+              state:
+                - color: white
+                - font-size: 52px
                 - font-weight: bold
               icon:
-                - width: 48px
-                - height: 48px
-                - margin-right: 8px
-              name:
-                - font-size: 20px
-                - font-weight: bold
-              state:
-                - font-size: 24px
-                - font-weight: bold
-            extra_styles: |
-              @keyframes blink {
-                0% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(255,0,0,0); }
-                50% { opacity: 0.7; transform: scale(1.05); box-shadow: 0 0 30px rgba(255,0,0,0.9); }
-                100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(255,0,0,0); }
-              }
-              @keyframes pulse {
-                0% { transform: scale(1); box-shadow: 0 0 0px rgba(255,165,0,0); }
-                50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(255,165,0,1); }
-                100% { transform: scale(1); box-shadow: 0 0 0px rgba(255,165,0,0); }
-              }
-      - type: grid
-        column_span: 2
-        cards:
-          - type: heading
-            heading: 🤖 AI Analysis
-          - type: markdown
-            content: >
-              | | |
-
-              |---|---|
-
-              | **Alert Type** | {{
-              states('sensor.greenhouse_automation_action') }} |
-
-              | **Priority** | {{
-              state_attr('sensor.greenhouse_automation_action', 'priority') }} |
-
-              | **Message** | {{ states('input_text.plant_alert_message') }} |
-
-              | **Alert Level** | {{ states('input_text.plant_alert_level') }} |
-
-              | **Fan Action** | {{
-              state_attr('sensor.greenhouse_automation_action', 'fan') }} |
-
-              | **Misting** | {{
-              state_attr('sensor.greenhouse_automation_action', 'misting') }} |
-
-              | **Soil Moisture** | {{ states('input_number.soil_moisture') |
-              float | int }}% |
-
-              | **Recommendations** | {{
-              state_attr('sensor.greenhouse_automation_action',
-              'recommendations') }} |
-
-              | **Last Updated** | {{
-              state_attr('sensor.greenhouse_automation_action', 'last_updated')
-              }} |
-            grid_options:
-              columns: full
-              rows: 5
-          - type: custom:apexcharts-card
-            graph_span: 24h
-            span:
-              start: day
-            header:
-              title: 📊 Greenhouse Climate
-            apex_config:
-              chart:
-                animations:
-                  enabled: true
-                  easing: easeinout
-                  speed: 800
-              yaxis:
-                - seriesName: Greenhouse Temp
-                  min: 0
-                  max: 40
-                  labels:
-                    style:
-                      colors: '#F44336'
-                - seriesName: Greenhouse Humidity
-                  opposite: true
-                  min: 0
-                  max: 100
-                  labels:
-                    style:
-                      colors: '#2196F3'
-              tooltip:
-                shared: true
-              grid:
-                borderColor: '#444'
-              stroke:
-                width:
-                  - 3
-                  - 3
-            series:
-              - entity: sensor.greenhouse_temperature
-                name: GH Temp 🌡️
-                type: line
-                color: '#F44336'
-                curve: smooth
-              - entity: sensor.greenhouse_humidity
-                name: GH Humidity 💧
-                type: line
-                color: '#2196F3'
-                curve: smooth
-              - entity: weather.home
-                attribute: temperature
-                name: Outside Temp 🌤️
-                type: line
-                color: '#FFEB3B'
-                curve: smooth
-      - type: grid
-        cards:
-          - type: heading
-            heading: 🌤️ EXTERNAL WEATHER CARD
-            heading_style: title
-          - show_current: true
-            show_forecast: true
-            type: weather-forecast
-            entity: weather.home
-            name: 🌤️ Outside Weather
-            forecast_type: daily
-            grid_options:
-              columns: full
-              rows: 4
-        column_span: 2
+                - color: white
+                - font-size: 36px
+                - margin-bottom: 8px
+            card_mod:
+              style: |
+                @keyframes pulse {
+                  0% { box-shadow: 0 0 0 0 rgba(244,67,54,0.7); }
+                  70% { box-shadow: 0 0 0 20px rgba(244,67,54,0); }
+                  100% { box-shadow: 0 0 0 0 rgba(244,67,54,0); }
+                }
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: input_text.ai_alert_type
+                name: Alert Type
+                show_state: true
+                icon: mdi:weather-windy
+                styles:
+                  card:
+                    - border-radius: 16px
+                    - height: 100px
+                    - background: linear-gradient(135deg,#37474F,#546E7A)
+                  name:
+                    - color: '#B0BEC5'
+                    - font-size: 11px
+                    - text-transform: uppercase
+                    - letter-spacing: 0.1em
+                  state:
+                    - color: white
+                    - font-size: 16px
+                    - font-weight: bold
+                  icon:
+                    - color: '#80CBC4'
+              - type: custom:button-card
+                entity: input_text.ai_alert_priority
+                name: Priority
+                show_state: true
+                icon: mdi:alert-octagram
+                styles:
+                  card:
+                    - border-radius: 16px
+                    - height: 100px
+                    - background: |
+                        [[[
+                          let p = (entity.state || '').toLowerCase();
+                          if(p.includes('critical')) return 'linear-gradient(135deg,#B71C1C,#E53935)';
+                          if(p.includes('high')) return 'linear-gradient(135deg,#E65100,#FB8C00)';
+                          return 'linear-gradient(135deg,#1B5E20,#43A047)';
+                        ]]]
+                  name:
+                    - color: rgba(255,255,255,0.7)
+                    - font-size: 11px
+                    - text-transform: uppercase
+                    - letter-spacing: 0.1em
+                  state:
+                    - color: white
+                    - font-size: 16px
+                    - font-weight: bold
+                  icon:
+                    - color: white
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: input_number.ai_alert_level
+                name: Critical Level
+                show_state: true
+                icon: mdi:gauge
+                state_display: '[[[ return Math.round(entity.state) + ''%'' ]]]'
+                styles:
+                  card:
+                    - border-radius: 16px
+                    - height: 100px
+                    - background: |
+                        [[[
+                          let v = parseFloat(entity.state) || 0;
+                          if(v < 30) return 'linear-gradient(135deg,#1B5E20,#43A047)';
+                          if(v < 60) return 'linear-gradient(135deg,#E65100,#FB8C00)';
+                          return 'linear-gradient(135deg,#B71C1C,#E53935)';
+                        ]]]
+                  name:
+                    - color: rgba(255,255,255,0.7)
+                    - font-size: 11px
+                    - text-transform: uppercase
+                    - letter-spacing: 0.1em
+                  state:
+                    - color: white
+                    - font-size: 28px
+                    - font-weight: bold
+                  icon:
+                    - color: white
+              - type: custom:button-card
+                entity: input_text.alert_timestamp
+                name: Detected At
+                show_state: true
+                icon: mdi:clock-alert
+                styles:
+                  card:
+                    - border-radius: 16px
+                    - height: 100px
+                    - background: linear-gradient(135deg,#4A148C,#7B1FA2)
+                  name:
+                    - color: rgba(255,255,255,0.7)
+                    - font-size: 11px
+                    - text-transform: uppercase
+                    - letter-spacing: 0.1em
+                  state:
+                    - color: white
+                    - font-size: 14px
+                    - font-weight: bold
+                  icon:
+                    - color: '#CE93D8'
+    theme: agriculture_green
+    show_icon_and_title: true
+  - title: Weather
+    icon: mdi:weather-partly-cloudy
+    path: weather
+    type: masonry
+    badges: []
+    cards:
+      - type: heading
+        heading: 🌤️ External Weather
+        heading_style: title
+      - type: weather-forecast
+        entity: weather.home
+        forecast_type: daily
+        show_current: true
+        show_forecast: true
+        style: |
+          ha-card { border-radius: 20px; }
+      - type: custom:horizon-card
+        darkMode: false
+        showMoon: true
+      - type: custom:windy-card
+        default_mode: map
+        metric_temp: default
+        metric_rain: default
+        metric_wind: default
+        zoom: 5
+        overlay: wind
+        product: ecmwf
+        level: surface
+        aspect_ratio: '16:9'
+        no_padding: true
+    show_icon_and_title: true
+    theme: agriculture_green
