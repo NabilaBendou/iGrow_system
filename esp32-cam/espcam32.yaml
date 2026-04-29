@@ -21,8 +21,13 @@ ota:
 
 wifi:
   ssid: "A14"
-  password: "rimajloul23"  
-  fast_connect: true
+  password: "rimajloul23"
+  # Add this block
+  manual_ip:
+    static_ip: 10.254.79.200
+    gateway: 10.254.79.77
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
   
   ap:
     ssid: "ESP32-CAM Setup"
