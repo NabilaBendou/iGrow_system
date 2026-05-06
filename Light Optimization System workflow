@@ -1,0 +1,231 @@
+{
+  "name": "Artificial Light optimization system",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f0f36369-4ae3-4257-b311-2cdca5e3d73c",
+              "leftValue": "={{ $json.needs_artificial_light }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Decision",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -272,
+        96
+      ],
+      "id": "46353ded-09d6-4fc7-8f25-74a99d9a1bf4",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "scene",
+        "service": "turn_on",
+        "serviceAttributes": {
+          "attributes": [
+            {
+              "name": "entity_id",
+              "value": "scene.tuya_on_2"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "336673c1-529b-432b-825f-b1eac1b70eba",
+      "name": "Turn on the light",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "ZmbF38DmXQDFa3Em",
+          "name": "Home Assistant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "scene",
+        "service": "turn_on",
+        "serviceAttributes": {
+          "attributes": [
+            {
+              "name": "entity_id",
+              "value": "scene.tuya_off_2"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "c21db91d-abc1-4159-ab2e-57493574a57c",
+      "name": "Turn off the light",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "ZmbF38DmXQDFa3Em",
+          "name": "Home Assistant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1040,
+        96
+      ],
+      "id": "0a85503a-4f16-4114-a35f-4e245431e43f",
+      "name": "Schedule - Every 2 Hours"
+    },
+    {
+      "parameters": {
+        "url": "http://10.254.79.161:8123/api/states/sensor.greenhouse_sensor_greenhouse_light_level",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -768,
+        96
+      ],
+      "id": "2f9efa7e-f24f-4050-aa71-820dcf7fa85c",
+      "name": "HA - Get Light Level"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the light level from HTTP Request node\nconst lightData = $input.first().json;\nconst lightLevel = parseFloat(lightData.state);\nconst threshold = 50;\n\n// Get current hour (for time-based restrictions)\nconst currentHour = new Date().getHours();\nconst isDaytime = currentHour >= 6 && currentHour <= 18;\nconst isNighttime = !isDaytime;\n\n// Determine if artificial lights are needed (only check during nighttime or daytime with low light)\nconst needsArtificialLight = (lightLevel < threshold) && (!isDaytime || lightLevel < 20);\n\n// Action for Tuya plug\nconst action = needsArtificialLight ? \"turn_on\" : \"turn_off\";\n\nreturn {\n  light_level: lightLevel,\n  threshold: threshold,\n  current_hour: currentHour,\n  is_daytime: isDaytime,\n  needs_artificial_light: needsArtificialLight,\n  action: action,\n  message: needsArtificialLight \n    ? `⚠️ Light level ${lightLevel} lx at ${currentHour}:00 - Turn ON lights`\n    : `✅ Light level ${lightLevel} lx at ${currentHour}:00 - Lights OFF`,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Logic - Light Analysis",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -528,
+        96
+      ],
+      "id": "d466bfdc-9f70-4cb1-b206-9a782183f52c",
+      "typeVersion": 2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Decision": {
+      "main": [
+        [
+          {
+            "node": "Turn on the light",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Turn off the light",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn on the light": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule - Every 2 Hours": {
+      "main": [
+        [
+          {
+            "node": "HA - Get Light Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HA - Get Light Level": {
+      "main": [
+        [
+          {
+            "node": "Logic - Light Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logic - Light Analysis": {
+      "main": [
+        [
+          {
+            "node": "Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "de42ac00-18b9-4834-816b-003c304bab2f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fddc3968bc80e20a2bbb004142f8ac780f4573c3f75f4e218538f98b84c38f4a"
+  },
+  "id": "QZzDW6rIkwe2AcgK",
+  "tags": []
+}
