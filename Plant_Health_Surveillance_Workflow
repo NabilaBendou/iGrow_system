@@ -1,0 +1,995 @@
+{
+  "name": "Plant Healt Surveillance",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        368
+      ],
+      "id": "e42c6cd6-daec-41db-a8af-07ebc4690831",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "=data",
+        "name": "={{ \"greenhouse_\" + new Date().toISOString().replace(/:/g, '-') + \".jpg\" }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1nUEwvYahnSiZ4yjNR2fKuS93wgqCl3K_",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        432
+      ],
+      "id": "2d8fc093-eb76-4371-b061-71c5921e351c",
+      "name": "Upload file"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// 1. GET OLLAMA RESPONSE\n// ============================================\n\nconst ollamaOutput = $input.first().json;\nconst responseText = ollamaOutput.response;\n\n// ============================================\n// 2. SET DEFAULT VALUES\n// ============================================\n\nlet analysisResult = {\n  health_status: \"unknown\",\n  detected_issue: \"none\",\n  soil_moisture: \"unknown\",\n  humidity_issue: false,\n  confidence: 0,\n  action_needed: \"none\",\n  recommendation: \"Unable to parse response\"\n};\n\n// ============================================\n// 3. PARSE JSON FROM OLLAMA RESPONSE\n// ============================================\n\ntry {\n  // Clean the response text - remove any non-JSON text\n  let cleanText = responseText;\n  \n  // Find JSON between curly braces\n  const jsonMatch = cleanText.match(/\\{[\\s\\S]*?\\}/);\n  if (jsonMatch) {\n    let jsonStr = jsonMatch[0];\n    \n    // Clean common issues\n    jsonStr = jsonStr.replace(/,(\\s*[}\\]])/g, '$1'); // Remove trailing commas\n    jsonStr = jsonStr.replace(/:\\s*\"([^\"]*?)\\/([^\"]*?)\\/([^\"]*?)\"/g, ':\"$1\"'); // Fix slashes in values\n    \n    const parsedJson = JSON.parse(jsonStr);\n    \n    // Helper function to clean values\n    const cleanValue = (val) => {\n      if (typeof val === 'string') {\n        // If value contains slashes, take only the first part\n        if (val.includes('/')) {\n          return val.split('/')[0].trim();\n        }\n        return val.trim();\n      }\n      return val;\n    };\n    \n    // Map with cleaning\n    analysisResult = {\n      health_status: cleanValue(parsedJson.health || parsedJson.health_status || \"unknown\"),\n      detected_issue: cleanValue(parsedJson.issue || parsedJson.detected_issue || \"none\"),\n      soil_moisture: cleanValue(parsedJson.moisture || parsedJson.soil_moisture || \"unknown\"),\n      humidity_issue: parsedJson.humidity_issue === true,\n      confidence: typeof parsedJson.confidence === 'number' ? parsedJson.confidence : \n                 (typeof parsedJson.confidence === 'string' ? parseFloat(parsedJson.confidence) || 0 : 0),\n      action_needed: cleanValue(parsedJson.action || parsedJson.action_needed || \"none\"),\n      recommendation: cleanValue(parsedJson.advice || parsedJson.recommendation || \"No recommendation\")\n    };\n    \n    console.log(\"Parsed:\", analysisResult);\n  }\n} catch (e) {\n  console.log(\"JSON parsing error:\", e.message);\n  console.log(\"Raw response:\", responseText);\n}\n\n// ============================================\n// 4. VALIDATE AND CLEAN VALUES\n// ============================================\n\n// Ensure action_needed is a valid value\nconst validActions = [\"water\", \"fan\", \"light\", \"specialist\", \"none\", \"retake_photo\"];\nif (!validActions.includes(analysisResult.action_needed)) {\n  analysisResult.action_needed = \"none\";\n  console.log(`Reset invalid action to \"none\"`);\n}\n\n// Ensure health_status is valid\nconst validStatuses = [\"healthy\", \"warning\", \"critical\", \"low_confidence\", \"unknown\"];\nif (!validStatuses.includes(analysisResult.health_status)) {\n  analysisResult.health_status = \"unknown\";\n}\n\n// Convert confidence\nif (analysisResult.confidence > 0 && analysisResult.confidence <= 1) {\n  analysisResult.confidence = analysisResult.confidence * 100;\n}\nif (analysisResult.confidence > 100) {\n  analysisResult.confidence = 100;\n}\nif (analysisResult.confidence < 0) {\n  analysisResult.confidence = 0;\n}\n\n// Validate based on confidence\nif (analysisResult.confidence < 50) {\n  analysisResult.health_status = \"low_confidence\";\n  analysisResult.recommendation = \"⚠️ Low confidence. Please retake photo with better lighting.\";\n  analysisResult.action_needed = \"retake_photo\";\n}\n\nconsole.log(`Final: ${analysisResult.health_status}, ${analysisResult.confidence}%, Action: ${analysisResult.action_needed}`);\n\n// ============================================\n// 5. RETURN DATA\n// ============================================\n\nreturn {\n  json: {\n    plant_id: $json.plant_id || \"plant_1\",\n    image_url: $json.image_url || \"\",\n    timestamp: new Date().toISOString(),\n    health_status: analysisResult.health_status,\n    detected_issue: analysisResult.detected_issue,\n    soil_moisture: analysisResult.soil_moisture,\n    humidity_issue: analysisResult.humidity_issue,\n    confidence: analysisResult.confidence,\n    action_needed: analysisResult.action_needed,\n    recommendation: analysisResult.recommendation,\n    raw_ollama_response: responseText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        448
+      ],
+      "id": "a0be3970-1d7f-4f6f-a693-853b1047fdce",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "33ff8c87-3a89-4244-8581-4876ddbb2329",
+              "leftValue": "={{ $json.soil_moisture }}",
+              "rightValue": "dry",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "277b620a-b46a-4288-87a9-542bcf566265",
+              "leftValue": "={{ $json.soil_moisture }}",
+              "rightValue": "very_dry",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        208
+      ],
+      "id": "15c8103d-532b-47f6-a2f3-8bba898830e3",
+      "name": "If1: Water Pump Control"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c9a3ecea-cb81-4c59-ab70-651c9b81847b",
+              "leftValue": "={{ $json.action_needed }}",
+              "rightValue": "fan",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "3b1f269f-15e0-44a0-b7ce-8f83cb35e3c7",
+              "leftValue": "={{ $json.humidity_issue }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1376,
+        256
+      ],
+      "id": "8fb3f456-a63d-4022-884a-e4f11d6beb89",
+      "name": "If2:Fan Control(Humidity)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9fd5839e-5d6e-40f4-a976-d20f4aff35de",
+              "leftValue": "={{ $json.health_status }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a4d2593c-0f9f-454a-85f7-d6f0f8a9cb4a",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": 0.3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        512
+      ],
+      "id": "1f557755-1def-4265-9caf-25e4931d7100",
+      "name": "If3: Specialist Alert"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "Plant Health Log",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Sheet1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2272,
+        0
+      ],
+      "id": "152975cc-5701-42a0-9c13-f20ac6176ac6",
+      "name": "Create spreadsheet"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "Critical Alerts",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Sheet2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        496
+      ],
+      "id": "9ee8c1b7-8742-466d-a501-b19116538df5",
+      "name": "Create spreadsheet1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:6333/collections/plant_health_memory/points/scroll",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": {\n    \"must\": [\n      {\n        \"key\": \"plant_id\",\n        \"match\": {\n          \"value\": \"={{ $json.plant_id || 'unknown' }}\"\n        }\n      }\n    ]\n  },\n  \"limit\": 10,\n  \"with_payload\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        352,
+        0
+      ],
+      "id": "8ab28176-c232-402d-9f53-c8518496647a",
+      "name": "Qdrant Search"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "0b3b722d-5dbe-4a5f-9a0e-e0800e8534e2",
+      "name": "Wait2",
+      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1840,
+        240
+      ],
+      "id": "9d641cfb-9511-4162-b9ef-a3d6dc371cd5",
+      "name": "Vantilation for 30 minutes",
+      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1616,
+        240
+      ],
+      "id": "ed5505cb-17de-4919-845a-03e032d10902",
+      "name": "Turn on fan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2048,
+        240
+      ],
+      "id": "a7f8829c-6e06-4049-be9c-247f66fbe033",
+      "name": "Turn off fan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8668668229:AAH5ujdxrRsHrzEa8WwFVoJSnPHVL-lOEoM/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\": \"7771186612\", \"text\": \"🚨 PLANT ALERT 🚨\\n\\nPlant: {{$json.plant_id}}\\nHealth Status: {{$json.health_status}}\\nDetected Issue: {{$json.detected_issue}}\\nConfidence: {{$json.confidence}}%\\nAction: {{$json.action_needed}}\\n\\nRecommendation: {{$json.recommendation}}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        496
+      ],
+      "id": "d02a117a-6d10-40ed-873a-063ce4ac2936",
+      "name": "Telegram Alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_on_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "fee31ea5-8504-47dc-b227-13ba0d4a6e3a",
+      "name": "Turn on Water pump"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "7ba99640-28c7-4756-a2e1-2d668c914d6f",
+      "name": "Irrigation for 5 minutes",
+      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1840,
+        0
+      ],
+      "id": "1b17dfe0-aeab-4f31-92a7-845396a0cf67",
+      "name": "Turn off water pump"
+    },
+    {
+      "parameters": {
+        "url": "http://10.254.79.161:8123/api/camera_proxy/camera.esp32_cam_esp32_cam",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -256,
+        160
+      ],
+      "id": "54837a38-3e79-4a3b-8dbd-e65771d35c6b",
+      "name": "Get Snapshot"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_text/set_value",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"entity_id\": \"input_text.plant_health_status\", \"value\": \"{{ $json.health_status }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        912
+      ],
+      "id": "4c00a23a-9777-4a1b-af70-cc23e9fd08a8",
+      "name": "Update Health Status"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_text/set_value",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"entity_id\": \"input_text.ai_recommendation\", \"value\": \"{{$json.recommendation}}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        912
+      ],
+      "id": "acf4f83a-05ee-42bf-888b-ecd499eee3e8",
+      "name": "Update recommendations"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_text/set_value",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"entity_id\": \"input_text.plant_alert_level\", \"value\": \"{{$json.action_needed}}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        912
+      ],
+      "id": "a1ced933-40c5-4c37-bd64-2b3b74f4206f",
+      "name": "Update action needed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_number/set_value",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"entity_id\": \"input_number.plant_confidence\", \"value\": {{$json.confidence}}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1328,
+        896
+      ],
+      "id": "7674f9bb-9d55-4728-a5fc-6a707d34fa98",
+      "name": "Update Confidance score"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_text/set_value",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"entity_id\": \"input_text.input_text_plant_tip\", \"value\": \"{{ $json.recommendation }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        896
+      ],
+      "id": "455dd7bb-e226-46fa-9376-59e568a6018b",
+      "name": "Update Plant Tip"
+    },
+    {
+      "parameters": {
+        "jsCode": "const googleDriveData = $('Upload file').first().json;\nconst historyResult = $('Qdrant Search').first().json;\nconst historicalRecords = historyResult?.result || [];\n\nconst fileId = googleDriveData.id;\nif (!fileId) throw new Error(\"No Google Drive file ID found.\");\n\nconst imageUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;\n\nconst response = await this.helpers.httpRequest({\n  method: \"GET\",\n  url: imageUrl,\n  returnFullResponse: true,\n  encoding: \"arraybuffer\"\n});\n\nconst imageBase64 = Buffer.from(response.body).toString(\"base64\");\n\nlet historySummary = \"No previous records.\";\nif (historicalRecords.length > 0) {\n  const last = historicalRecords[0]?.payload;\n  historySummary = `${historicalRecords.length} past records. Last: ${last?.health_status || 'unknown'}, issue: ${last?.detected_issue || 'none'}`;\n}\n\nconst analysisPrompt = `You are a plant health expert. Analyze this plant photo carefully.\nLook at the leaves, stem, soil, and overall appearance.\nRespond ONLY with this exact JSON — no extra text:\n{\n  \"health\": \"healthy or warning or critical\",\n  \"issue\": \"specific visible problem, or none\",\n  \"moisture\": \"dry or moist or wet\",\n  \"humidity_issue\": true or false,\n  \"action\": \"water or fan or light or specialist or none\",\n  \"advice\": \"one clear sentence about what to do\"\n}\nPlant history: ${historySummary}`;\n\nconst ollamaBody = {\n  model: \"moondream\",\n  prompt: analysisPrompt,\n  images: [imageBase64],\n  stream: false\n};\n\nreturn {\n  json: {\n    image_url: imageUrl,\n    plant_id: googleDriveData.plant_id || \"plant_1\",\n    timestamp: new Date().toISOString(),\n    historical_records_count: historicalRecords.length,\n    ollama_body: JSON.stringify(ollamaBody)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        416
+      ],
+      "id": "2e406814-ad71-48b8-b2c7-99fba2038526",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.ollama_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "2e0a9eb3-e7bd-444d-9fe5-d55758466d07",
+      "name": "Ollama:moondream"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/input_datetime/set_datetime",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"input_datetime.last_watered\", \"datetime\": \"{{ $now.toISO().slice(0, 19).replace('T', ' ') }}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "941b00c1-464e-4048-961a-cb28ea628cc0",
+      "name": "Update Date and time"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://10.254.79.161:6333/collections/plant_health_memory/points",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"points\": [{\"id\": {{ Date.now() }}, \"vector\": [0.1, 0.2, 0.3, 0.4], \"payload\": {\"plant_id\": \"={{ $json.plant_id || 'plant_1' }}\", \"timestamp\": \"={{ new Date().toISOString() }}\", \"health_status\": \"={{ $json.health_status || 'unknown' }}\", \"detected_issue\": \"={{ $json.detected_issue || 'none' }}\", \"soil_moisture\": \"={{ $json.soil_moisture || 'unknown' }}\", \"humidity\": \"={{ $json.humidity || 'unknown' }}\", \"temperature\": \"={{ $json.temperature || 'unknown' }}\", \"confidence\": {{ $json.confidence || 0 }}, \"action_needed\": \"={{ $json.action_needed || 'none' }}\", \"alert_sent\": {{ $json.alert_sent || false }}, \"image_url\": \"={{ $json.image_url || '' }}\", \"recommendation\": \"={{ $json.recommendation || '' }}\"}}]}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2592,
+        240
+      ],
+      "id": "3727f5d7-88eb-4bb3-a186-d616b5e527eb",
+      "name": "Qdrant insert"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If1: Water Pump Control",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update recommendations",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update action needed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Health Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Confidance score",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Plant Tip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2:Fan Control(Humidity)": {
+      "main": [
+        [
+          {
+            "node": "Turn on fan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3: Specialist Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1: Water Pump Control": {
+      "main": [
+        [
+          {
+            "node": "Turn on Water pump",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2:Fan Control(Humidity)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3: Specialist Alert": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Qdrant insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet1": {
+      "main": [
+        [
+          {
+            "node": "Qdrant insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Search": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vantilation for 30 minutes": {
+      "main": [
+        [
+          {
+            "node": "Turn off fan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn on fan": {
+      "main": [
+        [
+          {
+            "node": "Vantilation for 30 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn off fan": {
+      "main": [
+        [
+          {
+            "node": "Qdrant insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn on Water pump": {
+      "main": [
+        [
+          {
+            "node": "Irrigation for 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Irrigation for 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Turn off water pump",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn off water pump": {
+      "main": [
+        [
+          {
+            "node": "Update Date and time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Ollama:moondream",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama:moondream": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Date and time": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a288634b-724b-479a-8b00-8412aa40c377",
+  "meta": {
+    "instanceId": "fddc3968bc80e20a2bbb004142f8ac780f4573c3f75f4e218538f98b84c38f4a"
+  },
+  "id": "Tmxkgjx5NiBper48",
+  "tags": []
+}
