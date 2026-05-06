@@ -1,0 +1,666 @@
+{
+  "name": "Greenhouse Climate Control - Home Assistant Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Get both items from the Merge Node (Append mode)\nconst items = $input.all();\n\nconsole.log(`📦 Received ${items.length} items from Merge Node`);\n\nlet temperature = null;\nlet humidity = null;\n\n// Process each item\nfor (const item of items) {\n  const data = item.json;\n  \n  console.log(`Processing entity: ${data.entity_id}`);\n  console.log(`State value: ${data.state}`);\n  \n  // Check for temperature sensor\n  if (data.entity_id === 'sensor.greenhouse_sensor_greenhouse_temperature_2') {\n    temperature = parseFloat(data.state);\n    console.log(`🌡️ Temperature found: ${temperature}°C`);\n  }\n  \n  // Check for humidity sensor\n  if (data.entity_id === 'sensor.greenhouse_sensor_greenhouse_humidity_2') {\n    humidity = parseFloat(data.state);\n    console.log(`💧 Humidity found: ${humidity}%`);\n  }\n}\n\n// Return combined result\nreturn {\n  temperature: temperature,\n  humidity: humidity,\n  temperature_celsius: temperature,\n  humidity_percent: humidity,\n  both_readings_available: (temperature !== null && humidity !== null),\n  timestamp: new Date().toISOString(),\n  summary: `Temperature: ${temperature}°C, Humidity: ${humidity}%`\n};"
+      },
+      "id": "f4cd0e95-7fc1-4e4c-9da7-480209b76b56",
+      "name": "Detect Sirocco & Weather Conditions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        480
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// CODE NODE 2: Detect Sirocco & Weather Conditions\n// ============================================\n\nconst sensorInput = $input.first().json;\nlet sensorData = sensorInput.sensor || {};\n\nlet weatherData = null;\ntry {\n  weatherData = $node['Get External Weather']?.json;\n} catch (e) {\n  console.log(\"No weather data available\");\n}\n\n// ========== FORCE TEST VALUES - REMOVE AFTER TESTING ==========\nconst FORCE_TEST = true;\n\nif (FORCE_TEST) {\n  console.log(\"⚠️⚠️⚠️ FORCE TEST MODE ACTIVE ⚠️⚠️⚠️\");\n  \n  sensorData = {\n    light: 400,\n    presence: \"ON\",\n    temperature: 35,\n    humidity: 25,\n    windSpeed: 5.5,\n    soilMoisture: 45,\n    source: \"mqtt_forced_test\"\n  };\n  \n  weatherData = {\n    main: { temp: 35, humidity: 25 },\n    wind: { speed: 5.5 },\n    weather: [{ main: \"Clear\", description: \"clear sky\" }]\n  };\n  \n  console.log(\"Forced Sensor Data:\", sensorData);\n  console.log(\"Forced Weather Data:\", weatherData);\n}\n// ========== END FORCE TEST ==========\n\nconsole.log(\"=== INCOMING DATA ===\");\nconsole.log(\"Sensor Data:\", sensorData);\nconsole.log(\"Weather Data Available:\", weatherData ? \"Yes\" : \"No\");\nif (weatherData) {\n  console.log(\"Weather Temp:\", weatherData.main?.temp);\n  console.log(\"Weather Humidity:\", weatherData.main?.humidity);\n  console.log(\"Weather Wind Speed:\", weatherData.wind?.speed);\n  console.log(\"Weather Condition:\", weatherData.weather?.[0]?.main);\n}\n\n// ============================================\n// PRIORITIZE: Use Sensor Data FIRST, Weather as FALLBACK\n// ============================================\n\nlet temperature = sensorData.temperature;\nlet humidity = sensorData.humidity;\nlet windSpeed = sensorData.windSpeed;\nlet soilMoisture = sensorData.soilMoisture ?? null;\nlet dataSource = \"sensor\";\n\nif (temperature === null && weatherData?.main?.temp !== undefined) {\n  temperature = weatherData.main.temp;\n  dataSource = \"weather\";\n}\n\nif (humidity === null && weatherData?.main?.humidity !== undefined) {\n  humidity = weatherData.main.humidity;\n  dataSource = \"weather\";\n}\n\nif (windSpeed === null && weatherData?.wind?.speed !== undefined) {\n  windSpeed = weatherData.wind.speed;\n  dataSource = \"weather\";\n}\n\nconst weatherCondition = weatherData?.weather?.[0]?.main || null;\nconst weatherDescription = weatherData?.weather?.[0]?.description || null;\n\nconsole.log(\"=== FINAL VALUES ===\");\nconsole.log(\"Temperature:\", temperature);\nconsole.log(\"Humidity:\", humidity);\nconsole.log(\"Wind Speed:\", windSpeed);\nconsole.log(\"Soil Moisture:\", soilMoisture);\nconsole.log(\"Weather Condition:\", weatherCondition);\n\n// ============================================\n// DETECT ALERT CONDITIONS\n// ============================================\n\nlet isSirocco = false;\nlet extremeHeat = false;\nlet moderateHeat = false;\nlet drought = false;\nlet soilDry = false;\n\nif (temperature !== null && humidity !== null) {\n  extremeHeat = temperature > 35;\n  moderateHeat = temperature > 30;\n  drought = humidity < 30;\n\n  if (temperature > 30 && humidity < 30) {\n    const hasStrongWind = (windSpeed !== null && windSpeed > 4.17);\n    const isClearSky = (weatherCondition === 'Clear') || (weatherCondition === null);\n    isSirocco = hasStrongWind && isClearSky;\n  }\n}\n\nif (soilMoisture !== null) {\n  soilDry = soilMoisture < 30;\n}\n\nconsole.log(\"=== ALERT CONDITIONS ===\");\nconsole.log(\"Extreme Heat:\", extremeHeat);\nconsole.log(\"Moderate Heat:\", moderateHeat);\nconsole.log(\"Drought:\", drought);\nconsole.log(\"Sirocco:\", isSirocco);\nconsole.log(\"Soil Dry:\", soilDry);\n\n// ============================================\n// GENERATE ALERT MESSAGES\n// ============================================\n\nconst alertMessages = [];\n\nif (isSirocco) {\n  alertMessages.push(`⚠️ SIROCCO ALERT! Hot, dry wind from Sahara! Temp: ${temperature}°C, Humidity: ${humidity}%, Wind: ${windSpeed} m/s`);\n}\nif (extremeHeat) {\n  alertMessages.push(`🔥 EXTREME HEAT! Temperature ${temperature}°C above 35°C! Humidity: ${humidity}%`);\n}\nif (drought) {\n  alertMessages.push(`💧 DROUGHT ALERT! Humidity ${humidity}% below 30%! Temperature: ${temperature}°C`);\n}\nif (soilDry) {\n  alertMessages.push(`🌱 SOIL DRY ALERT! Soil moisture ${soilMoisture}% below 30%! Water plants now.`);\n}\nif (moderateHeat && !extremeHeat && !isSirocco) {\n  alertMessages.push(`🌡️ MODERATE HEAT: Temperature ${temperature}°C above 30°C, Humidity: ${humidity}%`);\n}\n\nlet priority = \"normal\";\nlet alertType = \"normal\";\n\nif (isSirocco) {\n  priority = \"critical\";\n  alertType = \"sirocco\";\n} else if (extremeHeat) {\n  priority = \"high\";\n  alertType = \"extreme_heat\";\n} else if (drought) {\n  priority = \"medium\";\n  alertType = \"drought\";\n} else if (soilDry) {\n  priority = \"medium\";\n  alertType = \"soil_dry\";\n} else if (moderateHeat) {\n  priority = \"low\";\n  alertType = \"moderate_heat\";\n}\n\n// ============================================\n// GENERATE RECOMMENDATIONS\n// ============================================\n\nlet recommendations = null;\n\nif (isSirocco) {\n  recommendations = `🚨 SIROCCO EMERGENCY (Temp: ${temperature}°C, Humidity: ${humidity}%, Wind: ${windSpeed} m/s) | Close all greenhouse vents immediately | Activate full misting system | Close all shading curtains | Monitor plants for heat stress | Check water levels | Consider moving sensitive plants`;\n} else if (extremeHeat) {\n  recommendations = `🔥 HEAT WAVE (Temp: ${temperature}°C, Humidity: ${humidity}%) | Increase ventilation | Water plants in early morning | Check soil moisture daily | Consider temporary shading | Monitor temperature hourly`;\n} else if (drought) {\n  recommendations = `💧 DROUGHT CONDITIONS (Humidity: ${humidity}%, Temp: ${temperature}°C) | Increase misting frequency | Check soil moisture deeply | Water plants thoroughly | Monitor for wilting leaves | Mulch to retain moisture`;\n} else if (soilDry) {\n  recommendations = `🌱 DRY SOIL (Moisture: ${soilMoisture}%) | Water plants immediately | Check irrigation system | Monitor soil moisture hourly | Ensure drainage is not blocked`;\n} else if (moderateHeat) {\n  recommendations = `🌡️ WARM CONDITIONS (Temp: ${temperature}°C) | Monitor temperature | Ensure adequate ventilation | Normal watering schedule | Check plants daily`;\n}\n\nlet safeRecommendations = recommendations;\nlet safeAlertMessage = alertMessages.length > 0 ? alertMessages.join(\" | \") : \"✅ CONDITIONS OPTIMALES: Tout est normal\";\n\nif (safeRecommendations) {\n  safeRecommendations = safeRecommendations.replace(/\\n/g, ' ').replace(/\\r/g, ' ');\n}\n\n// ============================================\n// DETERMINE ACTIONS\n// ============================================\n\nconst actions = {\n  fan: (extremeHeat || isSirocco) ? \"on\" : \"off\",\n  shading: (extremeHeat || isSirocco) ? \"close\" : \"auto\",\n  misting: (drought || isSirocco) ? \"on\" : \"off\",\n  water: soilDry ? \"on\" : \"off\",\n  ventilation: (extremeHeat || isSirocco) ? \"max\" : \"normal\",\n  alert_level: isSirocco ? \"critical\" : (extremeHeat ? \"high\" : (drought || soilDry ? \"medium\" : \"normal\"))\n};\n\n// ============================================\n// RETURN COMPLETE DATA\n// ============================================\n\nconst currentTime = new Date().toISOString();\n\nreturn {\n  sensor: {\n    light: sensorData.light,\n    presence: sensorData.presence,\n    temperature: sensorData.temperature,\n    humidity: sensorData.humidity,\n    windSpeed: sensorData.windSpeed,\n    soilMoisture: soilMoisture,\n    source: sensorData.source || \"mqtt\"\n  },\n\n  weather: {\n    temperature: weatherData?.main?.temp || null,\n    humidity: weatherData?.main?.humidity || null,\n    windSpeed: weatherData?.wind?.speed || null,\n    condition: weatherCondition,\n    description: weatherDescription,\n    source: weatherData ? \"openweathermap\" : null\n  },\n\n  combined: {\n    temperature: temperature,\n    humidity: humidity,\n    windSpeed: windSpeed,\n    soilMoisture: soilMoisture,\n    dataSource: dataSource,\n    hasSensorData: sensorData.temperature !== null || sensorData.humidity !== null\n  },\n\n  alert: {\n    isActive: (priority !== \"normal\"),\n    priority: priority,\n    type: alertType,\n    level: priority === \"critical\" ? \"critical\" : (priority === \"high\" ? \"high\" : \"info\"),\n    message: safeAlertMessage,\n    conditions: {\n      isSirocco: isSirocco,\n      extremeHeat: extremeHeat,\n      moderateHeat: moderateHeat,\n      drought: drought,\n      soilDry: soilDry,\n      temperature: temperature,\n      humidity: humidity,\n      windSpeed: windSpeed,\n      soilMoisture: soilMoisture,\n      weatherCondition: weatherCondition\n    }\n  },\n\n  recommendations: safeRecommendations,\n  actions: actions,\n  timestamp: currentTime,\n  updatedAt: currentTime,\n  testMode: FORCE_TEST ? \"active\" : \"inactive\"\n};"
+      },
+      "id": "3175434b-6902-4e33-b854-80d17008a839",
+      "name": "Advanced Control Logic (Anti-Sirocco)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "33ff8c87-3a89-4244-8581-4876ddbb2329",
+              "leftValue": "={{ $json.actions.misting }}",
+              "rightValue": "on",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "277b620a-b46a-4288-87a9-542bcf566265",
+              "leftValue": "={{ $json.alert.conditions.drought }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        16
+      ],
+      "id": "cd987237-7fbb-4cdc-b87a-48e0d4e308fe",
+      "name": "If1: Water Pump Control"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        224
+      ],
+      "id": "a8cb0cfb-269b-4e3b-a73b-980efa62400b",
+      "name": "Vantilation for 30 minutes",
+      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        224
+      ],
+      "id": "3c98a383-54bc-4031-b9f7-b1c6fbb97826",
+      "name": "Turn on fan",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        224
+      ],
+      "id": "86b22887-bb29-4cdf-b1e5-b05642d0f054",
+      "name": "Turn off fan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_on_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0750263d-f0f6-4bd6-8b57-6704a9da0f93",
+      "name": "Turn on Water pump",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0008bd17-8ee5-4587-8812-feafe77be841",
+      "name": "Irrigation for 5 minutes",
+      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e8e05df9-8ecb-4900-a3e2-efea541bf5ff",
+      "name": "Turn off water pump"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c9a3ecea-cb81-4c59-ab70-651c9b81847b",
+              "leftValue": "={{ $json.actions.fan }}",
+              "rightValue": "on",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "3b1f269f-15e0-44a0-b7ce-8f83cb35e3c7",
+              "leftValue": "={{ $json.alert.conditions.extremeHeat }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        240
+      ],
+      "id": "df36c0e8-b29d-4ac4-ba7c-c61b6639bd93",
+      "name": "If2:Fan Control(Humidity)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9fd5839e-5d6e-40f4-a976-d20f4aff35de",
+              "leftValue": "={{ $json.health_status }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a4d2593c-0f9f-454a-85f7-d6f0f8a9cb4a",
+              "leftValue": "={{ $json.confidence }}",
+              "rightValue": 0.3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        464
+      ],
+      "id": "f2d0c4e8-c23c-471a-8d58-50eddf8b5f79",
+      "name": "If3: Specialist Alert1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8668668229:AAH5ujdxrRsHrzEa8WwFVoJSnPHVL-lOEoM/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\": \"7771186612\", \"text\": \"🚨 WEATHER ALERT 🚨\\n\\nTemp: {{$json.combined.temperature}}°C | Humidity: {{$json.combined.humidity}}% | Wind: {{$json.combined.windSpeed}} m/s\\n\\n{{$json.alert.message}}\\n\\n{{$json.recommendations}}\\n\\nFan: {{$json.actions.fan}} | Misting: {{$json.actions.misting}} | Priority: {{$json.alert.priority}}\"}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        448
+      ],
+      "id": "687b31b5-03d1-4274-9d81-d69dbae32633",
+      "name": "Telegram Alert"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst haUrl = \"http://10.254.79.161:8123\";\nconst haToken = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI\";\n\nconst headers = {\n  \"Authorization\": `Bearer ${haToken}`,\n  \"Content-Type\": \"application/json\"\n};\n\n// Calculate alert level percentage based on priority\nlet alertLevel = 0;\nif (data.alert?.priority === 'critical') alertLevel = 95;\nelse if (data.alert?.priority === 'high') alertLevel = 75;\nelse if (data.alert?.priority === 'medium') alertLevel = 50;\nelse if (data.alert?.priority === 'low') alertLevel = 25;\nelse alertLevel = 0;\n\n// Current timestamp for alerts\nconst currentTimestamp = new Date().toISOString();\nconst formattedTime = new Date().toLocaleString();\n\n// Extract recommendation from data\nconst recommendation = data.recommendations || data.alert?.message || data.recommendation || \"No recommendation available\";\n\n// Extract detected labels\nconst detectedLabels = data.sensor ? Object.keys(data.sensor).filter(k => data.sensor[k] !== null).join(\", \") : \"none\";\n\nconst updates = [\n  // ============================================\n  // AI ALERT ENTITIES (Matching your helper names)\n  // ============================================\n  \n  // Critical Alert Level (input_number)\n  {\n    url: `${haUrl}/api/services/input_number/set_value`,\n    body: {\n      entity_id: \"input_number.critical_alert_level\",\n      value: alertLevel\n    }\n  },\n  \n  // AI Alert Level (input_number)\n  {\n    url: `${haUrl}/api/services/input_number/set_value`,\n    body: {\n      entity_id: \"input_number.ai_alert_level\",\n      value: alertLevel\n    }\n  },\n  \n  // AI Alert Priority (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.ai_alert_priority\",\n      value: String(data.alert?.priority ?? \"normal\")\n    }\n  },\n  \n  // AI Alert Type (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.ai_alert_type\",\n      value: String(data.alert?.type ?? \"sirocco\")\n    }\n  },\n  \n  // Alert Timestamp (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.alert_timestamp\",\n      value: formattedTime\n    }\n  },\n  \n  // AI Recommendation (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.ai_recommendation\",\n      value: String(recommendation).substring(0, 255)\n    }\n  },\n  \n  // Confidence Score (input_number)\n  {\n    url: `${haUrl}/api/services/input_number/set_value`,\n    body: {\n      entity_id: \"input_number.plant_confidence\",\n      value: data.confidence || data.workflow_confidence || 98\n    }\n  },\n  \n  // Detected Labels (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.plant_labels\",\n      value: detectedLabels\n    }\n  },\n  \n  // Plant Alert Level (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.plant_alert_level\",\n      value: String(data.alert?.priority ?? \"normal\")\n    }\n  },\n  \n  // Plant Alert Message (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.plant_alert_message\",\n      value: String(data.alert?.message ?? \"Sirocco conditions detected\").substring(0, 255)\n    }\n  },\n  \n  // Plant Health Status (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.plant_health_status\",\n      value: alertLevel > 70 ? \"Critical\" : alertLevel > 40 ? \"Warning\" : \"Normal\"\n    }\n  },\n  \n  // Plant Tip (input_text)\n  {\n    url: `${haUrl}/api/services/input_text/set_value`,\n    body: {\n      entity_id: \"input_text.input_text_plant_tip\",\n      value: String(data.tip || recommendation || \"Monitor soil moisture levels\").substring(0, 255)\n    }\n  },\n  \n  // ============================================\n  // SENSOR DATA ENTITIES\n  // ============================================\n  \n  // Greenhouse Light Level (input_number)\n  {\n    url: `${haUrl}/api/services/input_number/set_value`,\n    body: {\n      entity_id: \"input_number.greenhouse_light_level\",\n      value: data.sensor?.light ?? 0\n    }\n  },\n  \n  // Greenhouse Presence (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/${data.sensor?.presence === \"ON\" ? \"turn_on\" : \"turn_off\"}`,\n    body: {\n      entity_id: \"input_boolean.greenhouse_presence\"\n    }\n  },\n  \n  // Soil Moisture (input_number)\n  {\n    url: `${haUrl}/api/services/input_number/set_value`,\n    body: {\n      entity_id: \"input_number.soil_moisture\",\n      value: data.sensor?.soilMoisture ?? 45\n    }\n  },\n  \n  // Temperature (counter - using set_value if available, or create state)\n  {\n    url: `${haUrl}/api/states/counter.temperature`,\n    body: {\n      state: String(data.combined?.temperature ?? data.sensor?.temperature ?? 35),\n      attributes: { unit_of_measurement: \"°C\", friendly_name: \"Temperature\" }\n    }\n  },\n  \n  // Humidity (counter)\n  {\n    url: `${haUrl}/api/states/counter.humidity`,\n    body: {\n      state: String(data.combined?.humidity ?? data.sensor?.humidity ?? 25),\n      attributes: { unit_of_measurement: \"%\", friendly_name: \"Humidity\" }\n    }\n  },\n  \n  // ============================================\n  // CONTROL ENTITIES (Virtual)\n  // ============================================\n  \n  // Fan Control (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/${data.actions?.fan === \"on\" ? \"turn_on\" : \"turn_off\"}`,\n    body: {\n      entity_id: \"input_boolean.fan_control\"\n    }\n  },\n  \n  // fan_virtual (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/${data.actions?.fan === \"on\" ? \"turn_on\" : \"turn_off\"}`,\n    body: {\n      entity_id: \"input_boolean.fan_virtual\"\n    }\n  },\n  \n  // Pump Control (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/${data.actions?.misting === \"on\" ? \"turn_on\" : \"turn_off\"}`,\n    body: {\n      entity_id: \"input_boolean.pump_control\"\n    }\n  },\n  \n  // pump_virtual (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/${data.actions?.misting === \"on\" ? \"turn_on\" : \"turn_off\"}`,\n    body: {\n      entity_id: \"input_boolean.pump_virtual\"\n    }\n  },\n  \n  // light_virtual (input_boolean)\n  {\n    url: `${haUrl}/api/services/input_boolean/turn_${data.sensor?.light > 300 ? \"on\" : \"off\"}`,\n    body: {\n      entity_id: \"input_boolean.light_virtual\"\n    }\n  },\n  \n  // ============================================\n  // DATETIME ENTITIES\n  // ============================================\n  \n  // Last Analysis (input_datetime)\n  {\n    url: `${haUrl}/api/services/input_datetime/set_datetime`,\n    body: {\n      entity_id: \"input_datetime.last_analysis\",\n      datetime: currentTimestamp.substring(0, 19)\n    }\n  }\n];\n\n// Send all updates to Home Assistant\nfor (const update of updates) {\n  try {\n    await this.helpers.httpRequest({\n      method: \"POST\",\n      url: update.url,\n      headers: headers,\n      body: JSON.stringify(update.body)\n    });\n    console.log(`✅ Updated: ${update.url}`);\n  } catch (e) {\n    console.log(`❌ Failed: ${update.url} - ${e.message}`);\n  }\n}\n\nconsole.log(\"✅ All HA entities updated successfully\");\n\n// Return the data for the next node\nreturn { \n  json: {\n    ...data,\n    ha_updates_completed: true,\n    alert_level: alertLevel,\n    timestamp: currentTimestamp\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        480
+      ],
+      "id": "f5167ac7-ef53-41a2-bf10-bcc426153f36",
+      "name": "Update HA states"
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather?q=Algiers&appid=826dd247e82fe9add85869d2b184bba3&units=metric",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Algiers"
+            },
+            {
+              "name": "appid",
+              "value": "826dd247e82fe9add85869d2b184bba3"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ef63128-baed-4da0-9653-ba68a79fb57b",
+      "name": "Get External Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -880,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1872,
+        464
+      ],
+      "id": "32f4d46e-320e-4ef4-afbe-67981ca915cc",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1376,
+        384
+      ],
+      "id": "5f79ff81-f071-4e14-8496-1ca1c440841e",
+      "name": "Merge",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "url": "http://10.254.79.161:8123/api/states/sensor.greenhouse_sensor_greenhouse_temperature_2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": " Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1632,
+        304
+      ],
+      "id": "4b12120d-7626-427f-ad7b-53b3f6d0cbbc",
+      "name": "Get Temperature from HA"
+    },
+    {
+      "parameters": {
+        "url": "http://10.254.79.161:8123/api/states/sensor.greenhouse_sensor_greenhouse_humidity_2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": " Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1632,
+        544
+      ],
+      "id": "e4384c16-7c2a-4ef0-856f-dde522bdc005",
+      "name": "Get Humidity from HA"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Detect Sirocco & Weather Conditions": {
+      "main": [
+        [
+          {
+            "node": "Get External Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Advanced Control Logic (Anti-Sirocco)": {
+      "main": [
+        [
+          {
+            "node": "Update HA states",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1: Water Pump Control": {
+      "main": [
+        [
+          {
+            "node": "Turn on Water pump",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vantilation for 30 minutes": {
+      "main": [
+        [
+          {
+            "node": "Turn off fan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn on fan": {
+      "main": [
+        [
+          {
+            "node": "Vantilation for 30 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Turn on Water pump": {
+      "main": [
+        [
+          {
+            "node": "Irrigation for 5 minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Irrigation for 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Turn off water pump",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3: Specialist Alert1": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2:Fan Control(Humidity)": {
+      "main": [
+        [
+          {
+            "node": "Turn on fan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update HA states": {
+      "main": [
+        [
+          {
+            "node": "If3: Specialist Alert1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If2:Fan Control(Humidity)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1: Water Pump Control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get External Weather": {
+      "main": [
+        [
+          {
+            "node": "Advanced Control Logic (Anti-Sirocco)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get Temperature from HA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Humidity from HA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Detect Sirocco & Weather Conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Temperature from HA": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Humidity from HA": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ed814135-2468-48bf-a7af-68c21940385a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fddc3968bc80e20a2bbb004142f8ac780f4573c3f75f4e218538f98b84c38f4a"
+  },
+  "id": "DGbVab5zdhB8GVd0",
+  "tags": []
+}
