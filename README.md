@@ -1,2 +1,2 @@
-# home-assistant-dashboard
-Our team HA dashboard project
+# iGrow_system
+Our team project " Automation and Monitoring System for Smart Agriculture. "
