@@ -3,114 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c",
-          "mode": "list",
-          "cachedResultName": "Water tank ",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Feuille 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Water Level (%)": "={{ $('Code in JavaScript').item.json.level }}",
-            "Timestamp": "={{ $('Code in JavaScript').item.json.timestamp }}",
-            "Consumption Rate (%/hr)": "={{ $json.consumptionRate }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "Timestamp",
-              "displayName": "Timestamp",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Water Level (%)",
-              "displayName": "Water Level (%)",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Consumption Rate (%/hr)",
-              "displayName": "Consumption Rate (%/hr)",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "id": "1ff36611-1cf0-427c-9886-e41e6aaddc7f",
-      "name": "Log to Google Sheets",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
-      "position": [
-        800,
-        560
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "n81F90DHABRrNP2U",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c",
-          "mode": "list",
-          "cachedResultName": "Water tank ",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Feuille 1",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1D_52A_-KTAkfbbSiLp4CxeQtw0VkdTi1keDqXk93A-c/edit#gid=0"
-        },
-        "options": {}
-      },
-      "id": "1407c601-4591-4130-8f41-14016b568136",
-      "name": "Read Tank History",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4,
-      "position": [
-        208,
-        112
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "n81F90DHABRrNP2U",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Get data from Merge node or directly from previous node\nconst items = $input.all();\n\n// Find current reading (looking for water_level instead of level)\nlet currentLevel = null;\nlet historyData = [];\n\nfor (const item of items) {\n  // Look for water_level from your webhook/Edit Fields node\n  if (item.json.water_level !== undefined && typeof item.json.water_level === 'number') {\n    currentLevel = item.json.water_level;\n  } \n  // Also check for 'level' if you rename it later\n  else if (item.json.level !== undefined && typeof item.json.level === 'number') {\n    currentLevel = item.json.level;\n  }\n  // Look for history data from Google Sheets\n  else if (item.json.Timestamp !== undefined || item.json['Water Level (%)'] !== undefined) {\n    historyData.push(item.json);\n  }\n}\n\n// If no current level found, check $json directly\nif (currentLevel === null && $json.water_level !== undefined) {\n  currentLevel = $json.water_level;\n}\n\nif (currentLevel === null && $json.level !== undefined) {\n  currentLevel = $json.level;\n}\n\n// If STILL no current level, check if $json itself is a number\nif (currentLevel === null && typeof $json === 'number') {\n  currentLevel = $json;\n}\n\n// FALLBACK: If no level at all, use a test value (change to 0 for empty tank)\nif (currentLevel === null || isNaN(currentLevel)) {\n  currentLevel = 75;  // Default test value - CHANGE THIS TO YOUR ACTUAL LEVEL\n}\n\n// Extract levels from history (Google Sheets data)\nlet levels = [];\nfor (const row of historyData) {\n  const levelValue = row['Water Level (%)'] || row['Water Level'] || row.water_level || row.level || row.currentLevel;\n  if (levelValue !== undefined && !isNaN(parseFloat(levelValue))) {\n    levels.push(parseFloat(levelValue));\n  }\n}\n\n// Calculate consumption rate from history (if available)\nlet consumptionRate = 5;  // Default: 5% per hour\nlet predictedEmptyHours = currentLevel / consumptionRate;\nlet status = \"default_prediction\";\n\n// If we have history, calculate real consumption rate\nif (levels.length >= 2) {\n  // Get the oldest level from history\n  const oldestLevel = levels[0];\n  const newestLevel = levels[levels.length - 1];\n  const totalDrop = oldestLevel - newestLevel;\n  \n  // Assume history spans 24 hours (adjust based on your actual data)\n  const hoursSpan = 24;\n  const realRate = totalDrop / hoursSpan;\n  \n  if (realRate > 0) {\n    consumptionRate = parseFloat(realRate.toFixed(2));\n    predictedEmptyHours = currentLevel / realRate;\n    status = \"history_based_prediction\";\n  }\n}\n\n// Add safety check for predictedEmptyHours (avoid infinity)\nif (!isFinite(predictedEmptyHours) || predictedEmptyHours < 0) {\n  predictedEmptyHours = 0;\n  status = \"no_consumption\";\n}\n\n// Generate human-readable time\nconst hours = Math.floor(predictedEmptyHours);\nconst minutes = Math.floor((predictedEmptyHours - hours) * 60);\n\nlet emptyTimeMessage = \"Never (no consumption detected)\";\nif (predictedEmptyHours > 0 && predictedEmptyHours < 1000) {\n  if (hours > 0) {\n    emptyTimeMessage = `${hours} hour${hours !== 1 ? 's' : ''} and ${minutes} minute${minutes !== 1 ? 's' : ''}`;\n  } else {\n    emptyTimeMessage = `${minutes} minute${minutes !== 1 ? 's' : ''}`;\n  }\n}\n\n// Return results\nreturn {\n  current_level: currentLevel,\n  consumption_rate_per_hour: consumptionRate,\n  predicted_empty_hours: parseFloat(predictedEmptyHours.toFixed(1)),\n  predicted_empty_time: emptyTimeMessage,\n  history_points_used: levels.length,\n  prediction_status: status,\n  needs_water: currentLevel < 20,\n  urgency: currentLevel < 10 ? \"IMMEDIATE\" : currentLevel < 20 ? \"HIGH\" : currentLevel < 35 ? \"MEDIUM\" : \"LOW\",\n  alert_message: currentLevel < 20 ? `⚠️ CRITICAL: Water level at ${currentLevel}%. Tank will be empty in ${emptyTimeMessage}!` : `Water level: ${currentLevel}%. ${emptyTimeMessage} until empty.`\n};"
+        "jsCode": "// Get water level from the input (from Code in JavaScript node)\nlet currentLevel = null;\n\n// Check various possible field names from the previous node\nif ($json.water_level !== undefined && typeof $json.water_level === 'number') {\n  currentLevel = $json.water_level;\n} else if ($json.level !== undefined && typeof $json.level === 'number') {\n  currentLevel = $json.level;\n} else if ($json.current_level !== undefined && typeof $json.current_level === 'number') {\n  currentLevel = $json.current_level;\n}\n\n// If no level found, default to 0 (tank empty)\nif (currentLevel === null || isNaN(currentLevel)) {\n  currentLevel = 0;\n}\n\n// Default consumption rate (5% per hour)\nlet consumptionRate = 5;\nlet predictedEmptyHours = currentLevel / consumptionRate;\nlet status = \"default_prediction\";\n\n// Safety checks\nif (!isFinite(predictedEmptyHours) || predictedEmptyHours < 0) {\n  predictedEmptyHours = 0;\n  status = \"no_consumption\";\n}\n\n// Format time message\nconst hours = Math.floor(predictedEmptyHours);\nconst minutes = Math.floor((predictedEmptyHours - hours) * 60);\n\nlet emptyTimeMessage = \"Never (no consumption detected)\";\nif (predictedEmptyHours > 0 && predictedEmptyHours < 1000) {\n  if (hours > 0) {\n    emptyTimeMessage = `${hours} hour${hours !== 1 ? 's' : ''} and ${minutes} minute${minutes !== 1 ? 's' : ''}`;\n  } else {\n    emptyTimeMessage = `${minutes} minute${minutes !== 1 ? 's' : ''}`;\n  }\n}\n\n// Return results\nreturn {\n  current_level: currentLevel,\n  consumption_rate_per_hour: consumptionRate,\n  predicted_empty_hours: parseFloat(predictedEmptyHours.toFixed(1)),\n  predicted_empty_time: emptyTimeMessage,\n  needs_water: currentLevel < 20,\n  urgency: currentLevel < 10 ? \"IMMEDIATE\" : currentLevel < 20 ? \"HIGH\" : currentLevel < 35 ? \"MEDIUM\" : \"LOW\",\n  alert_message: currentLevel < 20 ? `⚠️ CRITICAL: Water level at ${currentLevel}%. Tank will be empty in ${emptyTimeMessage}!` : `Water level: ${currentLevel}%. ${emptyTimeMessage} until empty.`,\n  \n  // For Google Sheets compatibility\n  consumptionRate: consumptionRate,\n  level: currentLevel,\n  \n  // Keep pump status from previous node if available\n  pump_status: $json.pump_status || \"UNKNOWN\",\n  timestamp: $json.timestamp || new Date().toISOString()\n};"
       },
       "id": "58ab0e7b-54fe-49dd-8292-76ca716c0327",
       "name": "Predict Empty Time",
@@ -126,7 +19,7 @@
         "conditions": {
           "number": [
             {
-              "value1": "={{ $json.predictedEmptyHours }}",
+              "value1": "={{ $json.predicted_empty_hours }}",
               "value2": 48
             }
           ]
@@ -146,7 +39,7 @@
         "conditions": {
           "number": [
             {
-              "value1": "={{ $json.currentLevel }}",
+              "value1": "={{ $json.current_level }}",
               "value2": 20
             }
           ]
@@ -166,7 +59,7 @@
         "conditions": {
           "number": [
             {
-              "value1": "={{ $json.currentLevel }}",
+              "value1": "={{ $json.current_level }}",
               "value2": 5
             }
           ]
@@ -183,81 +76,6 @@
     },
     {
       "parameters": {
-        "jsCode": "// List all non-essential devices here\nconst nonEssentialDevices = [\n  '{{TUYA_DEVICE_IRRIGATION}}',\n  '{{TUYA_DEVICE_FOUNTAIN}}',\n  '{{TUYA_DEVICE_MISTER}}'\n];\n\n// In real n8n, use HTTP Request nodes per device.\n// This is a placeholder logic.\nreturn { devicesShutDown: nonEssentialDevices };"
-      },
-      "id": "77b97239-f2a6-4c9b-b648-4839069d7466",
-      "name": "Shut Down Non-Essential Devices",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1088,
-        560
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1088,
-        208
-      ],
-      "id": "4ccc7c60-4b22-4d76-b505-59065e9e346d",
-      "name": "Activate Fill Pump (Tuya)"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1520,
-        208
-      ],
-      "id": "8c4e79f0-fbe4-4a8e-b195-29739b824406",
-      "name": "Stop Fill Pump"
-    },
-    {
-      "parameters": {
         "method": "POST",
         "url": "https://api.telegram.org/bot8668668229:AAH5ujdxrRsHrzEa8WwFVoJSnPHVL-lOEoM/sendMessage",
         "sendHeaders": true,
@@ -271,13 +89,13 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"chat_id\": \"7771186612\", \"text\": \"🚨 CRITICAL WATER ALERT 🚨\\n\\nCurrent water level: {{$json.currentLevel}}%\\nConsumption rate: {{$json.consumptionRate}}%/hour\\n\\n⚠️ ALL NON-ESSENTIAL DEVICES HAVE BEEN SHUT DOWN ⚠️\\n\\nImmediate action required:\\n1. Refill tank immediately\\n2. Check for leaks\\n3. Priority water delivery needed\\n\\nTank Status: CRITICAL\"}",
+        "jsonBody": "={\n  \"chat_id\": \"7771186612\",\n  \"text\": \"🚨 CRITICAL WATER ALERT 🚨\\n\\nCurrent water level: {{$json.current_level}}%\\nConsumption rate: {{$json.consumption_rate_per_hour}}%/hour\\n\\n⚠️ ALL NON-ESSENTIAL DEVICES HAVE BEEN SHUT DOWN ⚠️\\n\\nImmediate action required:\\n1. Refill tank immediately\\n2. Check for leaks\\n3. Priority water delivery needed\\n\\nTank Status: {{$json.urgency}}\\n\\n{{$json.alert_message}}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1088,
+        1376,
         384
       ],
       "id": "e054ecfc-b3aa-4f93-8f77-c8d1528d5999",
@@ -298,13 +116,13 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"chat_id\": \"7771186612\", \"text\": \"⚠️ WATER TANK ALERT ⚠️\\n\\nPredicted empty in: {{$json.predictedEmptyHours}} hours\\nCurrent water level: {{$json.currentLevel}}%\\nConsumption rate: {{$json.consumptionRate}}%/hour\\n\\nAction Required:\\nPlease arrange water delivery within 48 hours.\\n\\nTank Status: WARNING\"}",
+        "jsonBody": "={\n  \"chat_id\": \"7771186612\",\n  \"text\": \"⚠️ WATER TANK ALERT ⚠️\\n\\nPredicted empty in: {{$json.predicted_empty_time}}\\nCurrent water level: {{$json.current_level}}%\\nConsumption rate: {{$json.consumption_rate_per_hour}}%/hour\\n\\nAction Required:\\nPlease arrange water delivery within 48 hours.\\n\\nTank Status: {{$json.urgency}}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1072,
+        1376,
         0
       ],
       "id": "d04d8d60-1537-43fd-9771-02c6091c00e8",
@@ -312,48 +130,28 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get water level from Edit Fields node output\nconst waterLevel = $json.water_level;\n\n// Add status and prediction info\nconst status = waterLevel < 20 ? \"CRITICAL\" : waterLevel < 35 ? \"LOW\" : \"OK\";\n\n// Calculate estimated hours until empty (assuming 15% per day usage)\nconst dailyUsage = 15; // Percentage per day - adjust based on your data\nconst hoursUntilEmpty = (waterLevel / dailyUsage) * 24;\n\nreturn {\n  water_level: waterLevel,\n  status: status,\n  hours_remaining: Math.round(hoursUntilEmpty),\n  needs_water: waterLevel < 20,\n  timestamp: new Date().toISOString()\n};"
+        "jsCode": "// Get raw value from bridge (0-1023 analog reading)\nconst rawValue = $json.raw_value || 0;\nconst threshold = $json.threshold || 300;  // Your SEUIL from Arduino\n\n// Convert raw value to percentage\n// raw_min = 0 (empty), raw_max = threshold (full at 300)\nlet waterLevel = 0;\nif (rawValue >= threshold) {\n  waterLevel = 100;  // Full tank\n} else if (rawValue <= 0) {\n  waterLevel = 0;    // Empty tank\n} else {\n  waterLevel = (rawValue / threshold) * 100;\n}\n\n// Round to 2 decimal places\nwaterLevel = Math.round(waterLevel * 100) / 100;\n\n// Get additional data from bridge\nconst pumpStatus = $json.pump_status || \"UNKNOWN\";\nconst timestamp = $json.timestamp || new Date().toISOString();\n\n// Add status and prediction info\nconst status = waterLevel < 20 ? \"CRITICAL\" : waterLevel < 35 ? \"LOW\" : \"OK\";\n\n// Calculate estimated hours until empty (assuming 15% per day usage)\nconst dailyUsage = 15; // Percentage per day - adjust based on your data\nconst hoursUntilEmpty = (waterLevel / dailyUsage) * 24;\n\n// Return both formats to maintain compatibility with other nodes\nreturn {\n  // Original format for compatibility with existing nodes\n  level: waterLevel,\n  water_level: waterLevel,\n  raw_value: rawValue,\n  threshold: threshold,\n  timestamp: timestamp,\n  pump_status: pumpStatus,\n  \n  // Additional fields for predictions\n  status: status,\n  hours_remaining: Math.round(hoursUntilEmpty),\n  needs_water: waterLevel < 20,\n  \n  // For Google Sheets logging\n  \"Water Level (%)\": waterLevel\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -32,
+        160,
         240
       ],
       "id": "668a67fb-262d-4346-ae7f-51c3c5bf7a4b",
       "name": "Code in JavaScript"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1296,
-        208
-      ],
-      "id": "65485920-717c-4ccf-838c-8c545656fe8b",
-      "name": "Wait",
-      "webhookId": "7773f26c-34a3-4e12-9471-44699bbf3f60"
-    },
-    {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "2313a464-d1b3-494f-9eef-643cbccef1a6",
-              "name": "water_level",
-              "value": "={{ $json.body.water_level }}",
-              "type": "string"
-            }
-          ]
-        },
+        "mode": "raw",
+        "jsonOutput": "{\n  \"assignments\": {\n    \"assignments\": [\n      {\n        \"id\": \"2313a464-d1b3-494f-9eef-643cbccef1a6\",\n        \"name\": \"water_level\",\n        \"value\": \"={{ $json.water_level }}\",\n        \"type\": \"number\"\n      },\n      {\n        \"id\": \"new-timestamp\",\n        \"name\": \"timestamp\",\n        \"value\": \"={{ $json.timestamp }}\",\n        \"type\": \"string\"\n      },\n      {\n        \"id\": \"pump_status\",\n        \"name\": \"pump_status\",\n        \"value\": \"={{ $json.pump_status }}\",\n        \"type\": \"string\"\n      },\n      {\n        \"id\": \"raw_value\",\n        \"name\": \"raw_value\",\n        \"value\": \"={{ $json.raw_value }}\",\n        \"type\": \"number\"\n      }\n    ]\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -208,
-        256
+        -112,
+        240
       ],
       "id": "0743b359-6b8d-42f9-9a4e-80c0ea7dc5fc",
       "name": "Edit Fields"
@@ -361,15 +159,15 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "water-level",
+        "path": "webhook/d70900f3-c5f1-4c30-a082-72ce53a0c472",
         "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -608,
-        256
+        -544,
+        240
       ],
       "id": "15c21f8f-d541-4946-a411-006926e75916",
       "name": "Webhook-Receives Water Level Data",
@@ -386,31 +184,49 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -416,
-        256
+        -336,
+        240
       ],
       "id": "afb94226-090e-4c33-95e6-518c147748a1",
       "name": "Respond to Webhook-Sends Confirmation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5000/control/pump",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"{{ $json.current_level < 20 ? 'on' : 'off' }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1376,
+        208
+      ],
+      "id": "4b79869b-3140-4170-8823-4738fcee6554",
+      "name": "Control via Arduino"
     }
   ],
   "pinData": {},
   "connections": {
-    "Log to Google Sheets": {
-      "main": [
-        []
-      ]
-    },
-    "Read Tank History": {
-      "main": [
-        [
-          {
-            "node": "Predict Empty Time",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Predict Empty Time": {
       "main": [
         [
@@ -426,11 +242,6 @@
           },
           {
             "node": "Check Critical 5%",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Log to Google Sheets",
             "type": "main",
             "index": 0
           }
@@ -452,11 +263,6 @@
       "main": [
         [
           {
-            "node": "Shut Down Non-Essential Devices",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Telegram Alert",
             "type": "main",
             "index": 0
@@ -464,16 +270,11 @@
         ]
       ]
     },
-    "Shut Down Non-Essential Devices": {
-      "main": [
-        []
-      ]
-    },
     "Check Below 20%": {
       "main": [
         [
           {
-            "node": "Activate Fill Pump (Tuya)",
+            "node": "Control via Arduino",
             "type": "main",
             "index": 0
           }
@@ -484,34 +285,7 @@
       "main": [
         [
           {
-            "node": "Read Tank History",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Predict Empty Time",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Activate Fill Pump (Tuya)": {
-      "main": [
-        [
-          {
-            "node": "Wait",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait": {
-      "main": [
-        [
-          {
-            "node": "Stop Fill Pump",
             "type": "main",
             "index": 0
           }
@@ -557,13 +331,13 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "16f4b22d-4454-4aa9-86a9-99447db1e5a3",
+  "versionId": "96668f46-e7a8-474b-88bc-92b0252e322b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fddc3968bc80e20a2bbb004142f8ac780f4573c3f75f4e218538f98b84c38f4a"
