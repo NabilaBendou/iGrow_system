@@ -1,0 +1,87 @@
+esphome:
+  name: greenhouse-sensor
+  friendly_name: Greenhouse Sensor
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+logger:
+  level: DEBUG
+
+api:
+
+mqtt:
+  broker: 10.254.79.161
+  port: 1883
+  username: "esp32_mqtt"  # Or whatever is in your config
+  password: "mqtt123"
+  discovery: true
+
+ota:
+  - platform: esphome
+    password: "ota123456"
+
+wifi:
+  ssid: "A14"
+  password: "rimajloul23"
+  manual_ip:
+    static_ip: 10.254.79.200  # Same subnet as HA (10.254.79.x)
+    gateway: 10.254.79.1 
+    subnet: 255.255.255.0
+    dns1: 8.8.8.8
+    dns2: 8.8.4.4
+
+web_server:
+  port: 80
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+
+sensor:
+    
+  - platform: dht
+    pin: GPIO4
+    model: DHT22
+    temperature:
+      name: "Greenhouse Sensor Greenhouse Temperature 2"
+      id: greenhouse_temperature
+    humidity:
+      name: "Greenhouse Sensor Greenhouse Humidity 2"
+      id: greenhouse_humidity
+    update_interval: 15s
+
+
+  - platform: tsl2591
+    name: "Greenhouse Light"
+    id: greenhouse_light
+    address: 0x29
+    update_interval: 30s
+    gain: auto
+    integration_time: 100ms
+    device_factor: 53
+    glass_attenuation_factor: 7.7
+    
+    visible:
+      name: "Greenhouse Visible Light"
+    
+    infrared:
+      name: "Greenhouse Infrared Light"
+    
+    full_spectrum:
+      name: "Greenhouse Full Spectrum Light"
+    
+    calculated_lux:
+      id: greenhouse_lux
+      name: "Greenhouse Light Level"
+    
+    actual_gain:
+      id: greenhouse_gain
+      name: "Greenhouse Light Sensor Gain"
+
+    
+    
