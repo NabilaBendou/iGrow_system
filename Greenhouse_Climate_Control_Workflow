@@ -150,81 +150,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"entity_id\": \"scene.tuya_on_2\"}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        0,
-        0
-      ],
-      "id": "0750263d-f0f6-4bd6-8b57-6704a9da0f93",
-      "name": "Turn on Water pump",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        208,
-        0
-      ],
-      "id": "0008bd17-8ee5-4587-8812-feafe77be841",
-      "name": "Irrigation for 5 minutes",
-      "webhookId": "28201fb7-da32-403b-8522-0deeb87a6cc0"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://10.254.79.161:8123/api/services/scene/turn_on",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIzZjc1NzE1NmRmMzU0OWFhOWI5ZjE1OWEyMDYwMjVlYSIsImlhdCI6MTc3NDM2OTExNCwiZXhwIjoyMDg5NzI5MTE0fQ.d3Z7lDl5f9hOeJvfiV-mt6Vhpn_gKUb3qol0hAYj3vI"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"entity_id\": \"scene.tuya_off_2\"}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        416,
-        0
-      ],
-      "id": "e8e05df9-8ecb-4900-a3e2-efea541bf5ff",
-      "name": "Turn off water pump"
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -465,6 +390,33 @@
       ],
       "id": "e4384c16-7c2a-4ef0-856f-dde522bdc005",
       "name": "Get Humidity from HA"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.254.79.15:5001/control",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"{{ $json.actions.water }}\"\n} ",
+        "options": {}
+      },
+      "id": "5847955f-757e-4e35-95fe-b5c542168b9c",
+      "name": "Control Irrigation Pump",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        0
+      ]
     }
   ],
   "pinData": {},
@@ -495,7 +447,7 @@
       "main": [
         [
           {
-            "node": "Turn on Water pump",
+            "node": "Control Irrigation Pump",
             "type": "main",
             "index": 0
           }
@@ -518,28 +470,6 @@
         [
           {
             "node": "Vantilation for 30 minutes",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Turn on Water pump": {
-      "main": [
-        [
-          {
-            "node": "Irrigation for 5 minutes",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Irrigation for 5 minutes": {
-      "main": [
-        [
-          {
-            "node": "Turn off water pump",
             "type": "main",
             "index": 0
           }
@@ -656,7 +586,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "ed814135-2468-48bf-a7af-68c21940385a",
+  "versionId": "83b59299-8668-48ff-80bc-5f2f856d23c6",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fddc3968bc80e20a2bbb004142f8ac780f4573c3f75f4e218538f98b84c38f4a"
