@@ -20,9 +20,9 @@ ota:
   platform: esphome
 
 wifi:
-  ssid: "A14"
-  password: "rimajloul23"
-  # Add this block
+  ssid: "your_wifi_ssid"
+  password: "you_wifi_password"
+  
   manual_ip:
     static_ip: 10.254.79.200
     gateway: 10.254.79.77
