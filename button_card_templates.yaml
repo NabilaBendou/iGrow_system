@@ -1,0 +1,30 @@
+animated_gauge:
+  styles:
+    card:
+      - height: 150px
+      - width: 150px
+      - border-radius: 12px
+      - transition: all 1s ease
+      - background: >
+          [[[ 
+            let val = parseFloat(entity.state);
+            if (val < 20) return 'linear-gradient(135deg, #2196F3, #64B5F6)';
+            if (val < 28) return 'linear-gradient(135deg, #4CAF50, #81C784)';
+            if (val < 35) return 'linear-gradient(135deg, #FFEB3B, #FFC107)';
+            return 'linear-gradient(135deg, #F44336, #E57373)';
+          ]]]
+    icon:
+      - transition: transform 0.5s ease
+      - animation: spin 1s linear infinite
+  state:
+    - operator: template
+      value: >
+        [[[ return parseFloat(entity.state) > 0; ]]]
+      styles:
+        card:
+          - box-shadow: 0 0 20px 5px rgba(255,255,255,0.3)
+  card_mod:
+    style: |
+      @keyframes spin {
+        100% { transform: rotate(360deg); }
+      }

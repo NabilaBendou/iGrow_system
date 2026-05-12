@@ -1,0 +1,81 @@
+- id: '1774381495402'
+  alias: Plant Analysis Webhook
+  description: ''
+  triggers:
+  - webhook_id: plant_analysis
+    trigger: webhook
+  actions:
+  - data:
+      value: '{{ trigger.json.status }}'
+    action: input_text.set_value
+    target:
+      entity_id: input_text.plant_health_status
+  - action: input_text.set_value
+    data:
+      value: '{{ trigger.json.labels }}'
+    target:
+      entity_id: input_text.plant_labels
+  - data:
+      value: '{{ trigger.json.score * 100 }}'
+    action: input_number.set_value
+    target:
+      entity_id: input_number.plant_confidence
+  - data:
+      datetime: '{{ now().isoformat() }}'
+    action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.last_analysis
+  - action: system_log.write
+    metadata: {}
+    data:
+      level: error
+      message: '{{ trigger }}'
+  mode: single
+- id: '1777326650840'
+  alias: Receive Greenhouse Energy Data
+  description: ''
+  triggers:
+  - trigger: webhook
+    webhook_id: greenhouse_energy_update
+    local_only: true
+  actions:
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.cost_today }}'
+    target:
+      entity_id: input_number.greenhouse_energy_cost
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.energy_used }}'
+    target:
+      entity_id: input_number.greenhouse_energy_used
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.runtime }}'
+    target:
+      entity_id: input_number.greenhouse_light_runtime
+  mode: single
+- id: '1777326765363'
+  alias: Receive Greenhouse Energy Data
+  description: ''
+  triggers:
+  - trigger: webhook
+    webhook_id: greenhouse_energy_update
+    local_only: true
+  actions:
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.cost_today }}'
+    target:
+      entity_id: input_number.greenhouse_energy_cost
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.energy_used }}'
+    target:
+      entity_id: input_number.greenhouse_energy_used
+  - action: input_number.set_value
+    data:
+      value: '{{ trigger.json.runtime }}'
+    target:
+      entity_id: input_number.greenhouse_light_runtime
+  mode: single

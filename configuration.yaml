@@ -1,0 +1,129 @@
+http:
+  cors_allowed_origins:
+    - "http://localhost:8080"
+    - "http://127.0.0.1:8080"
+    - "http://10.254.79.161:8080"
+mobile_app:
+recorder:
+  commit_interval: 30
+  include:
+    entities:
+      - sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2
+      - sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2
+      - sensor.greenhouse_sensor_greenhouse_light_level
+      - sensor.greenhouse_vpd
+      - sensor.greenhouse_absolute_humidity
+      - sensor.greenhouse_dew_point
+      - sensor.greenhouse_heat_index
+      - sensor.greenhouse_humidex
+      - sensor.greenhouse_frost_point
+
+script: !include scripts.yaml
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+# SERIAL SENSOR - MUST BE SEPARATE, NOT UNDER TEMPLATE
+sensor:
+  - platform: serial
+    serial_port: "COM7"
+    baudrate: 9600
+    name: "Water Level"
+    unit_of_measurement: "%"
+    device_class: moisture
+    icon: "mdi:water-percent"
+    value_template: "{{ value }}"
+
+# TEMPLATE SENSORS - Keep these separate
+template:
+  - sensor:
+      - name: "Greenhouse VPD"
+        unit_of_measurement: "kPa"
+        icon: mdi:leaf-circle
+        state_class: measurement
+        device_class: pressure
+        state: >
+          {% set T = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2') | float(0) %}
+          {% set H = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2') | float(0) %}
+          {% set SVP = 0.6108 * (2.71828 ** (17.27 * T / (T + 237.3))) %}
+          {% set AVP = SVP * H / 100 %}
+          {{ (SVP - AVP) | round(2) }}
+
+      - name: "Greenhouse Absolute Humidity"
+        unit_of_measurement: "g/m³"
+        icon: mdi:water
+        state_class: measurement
+        state: >
+          {% set T = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2') | float(0) %}
+          {% set H = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2') | float(0) %}
+          {% set SVP = 6.112 * (2.71828 ** ((17.67 * T) / (T + 243.5))) %}
+          {% set AVP = SVP * H / 100 %}
+          {{ (216.7 * AVP / (273.15 + T)) | round(1) }}
+
+      - name: "Greenhouse Dew Point"
+        unit_of_measurement: "°C"
+        icon: mdi:thermometer-water
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set T = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2') | float(0) %}
+          {% set H = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2') | float(0) %}
+          {% set a = 17.67 %}
+          {% set b = 243.5 %}
+          {% set gamma = ((a * T) / (b + T)) + ((H | float / 100) | log) %}
+          {{ (b * gamma / (a - gamma)) | round(1) }}
+
+      - name: "Greenhouse Heat Index"
+        unit_of_measurement: "°C"
+        icon: mdi:sun-thermometer
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set T = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2') | float(0) %}
+          {% set H = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2') | float(0) %}
+          {% if T < 27 %}
+            {{ T | round(1) }}
+          {% else %}
+            {% set HI = -8.78469475556 + 1.61139411 * T + 2.33854883889 * H - 0.14611605 * T * H - 0.012308094 * (T * T) - 0.0164248277778 * (H * H) + 0.002211732 * (T * T) * H + 0.00072546 * T * (H * H) - 0.000003582 * (T * T) * (H * H) %}
+            {{ HI | round(1) }}
+          {% endif %}
+
+      - name: "Greenhouse Humidex"
+        unit_of_measurement: "°C"
+        icon: mdi:sun-thermometer
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set T = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_temperature_2') | float(0) %}
+          {% set H = states('sensor.greenhouse_sensor_greenhouse_sensor_greenhouse_humidity_2') | float(0) %}
+          {% set Dew = states('sensor.greenhouse_dew_point') | float(0) %}
+          {% set e = 6.112 * 2.71828 ** (17.62 * Dew / (243.12 + Dew)) %}
+          {{ (T + 0.5555 * (e - 10)) | round(1) }}
+
+      - name: "Greenhouse Frost Point"
+        unit_of_measurement: "°C"
+        icon: mdi:snowflake-thermometer
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set Dew = states('sensor.greenhouse_dew_point') | float(0) %}
+          {{ (Dew - 9.4) | round(1) }}
+
+      - name: "Greenhouse Light Status"
+        icon: mdi:weather-sunny
+        state: >
+          {% set light = states('sensor.greenhouse_sensor_greenhouse_light_level') | float(0) %}
+          {% if light < 10 %}
+            Very Dark
+          {% elif light < 50 %}
+            Dark
+          {% elif light < 200 %}
+            Dim
+          {% elif light < 500 %}
+            Normal
+          {% elif light < 1000 %}
+            Bright
+          {% else %}
+            Very Bright
+          {% endif %}
+ 

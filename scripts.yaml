@@ -1,0 +1,88 @@
+toggle_light_virtual:
+  alias: Toggle Light Virtual
+  sequence:
+    - service: input_boolean.toggle
+      target:
+        entity_id: input_boolean.light_virtual
+
+    - choose:
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.light_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.fan_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.pump_virtual
+                  state: "on"
+          sequence:
+            - service: scene.turn_on
+              target:
+                entity_id: scene.tuya_on_2
+      default:
+        - service: scene.turn_on
+          target:
+            entity_id: scene.tuya_off_2
+
+
+toggle_fan_virtual:
+  alias: Toggle Fan Virtual
+  sequence:
+    - service: input_boolean.toggle
+      target:
+        entity_id: input_boolean.fan_virtual
+
+    - choose:
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.light_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.fan_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.pump_virtual
+                  state: "on"
+          sequence:
+            - service: scene.turn_on
+              target:
+                entity_id: scene.tuya_on_2
+      default:
+        - service: scene.turn_on
+          target:
+            entity_id: scene.tuya_off_2
+
+
+toggle_pump_virtual:
+  alias: Toggle Pump Virtual
+  sequence:
+    - service: input_boolean.toggle
+      target:
+        entity_id: input_boolean.pump_virtual
+
+    - choose:
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: state
+                  entity_id: input_boolean.light_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.fan_virtual
+                  state: "on"
+                - condition: state
+                  entity_id: input_boolean.pump_virtual
+                  state: "on"
+          sequence:
+            - service: scene.turn_on
+              target:
+                entity_id: scene.tuya_on_2
+      default:
+        - service: scene.turn_on
+          target:
+            entity_id: scene.tuya_off_2
